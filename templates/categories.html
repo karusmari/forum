@@ -1,0 +1,16 @@
+{{define "categories.html"}}
+    {{template "header" .}}
+    <div class="categories-container">
+        <h1>Categories</h1>
+        <div class="categories-grid">
+            {{range .Categories}}
+                <div class="category-card">
+                    <h2>{{.Name}}</h2>
+                    <p>{{.Description}}</p>
+                    <a href="/category/{{.ID}}" class="view-posts">View Posts</a>
+                </div>
+            {{end}}
+        </div>
+    </div>
+    {{template "footer" .}}
+{{end}} 

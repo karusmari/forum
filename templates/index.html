@@ -1,0 +1,74 @@
+{{ define "content" }}
+<div class="container">
+    <div class="filters">
+        <!-- Debug info -->
+        <div style="display:none">
+            Selected Category: {{.SelectedCategory}}
+            Show My Posts: {{.ShowMyPosts}}
+            Show Liked Posts: {{.ShowLikedPosts}}
+        </div>
+        <h3>Filters</h3>
+        <form method="GET" action="/" class="filter-form">
+            <select name="category" aria-label="Filter by category">
+                <option value="">All Categories</option>
+                {{ range .Categories }}
+                    <option value="{{ .ID }}" {{ if eq $.SelectedCategory .ID }}selected{{ end }}>
+                        {{ .Name }}
+                    </option>
+                {{ end }}
+            </select>
+            {{ if .User }}
+            <div class="filter-options">
+                <label>
+                    <input type="checkbox" name="my_posts" value="true" {{ if .ShowMyPosts }}checked{{ end }}>
+                    My Posts
+                </label>
+                <label>
+                    <input type="checkbox" name="liked_posts" value="true" {{ if .ShowLikedPosts }}checked{{ end }}>
+                    Liked Posts
+                </label>
+            </div>
+            {{ end }}
+            <button type="submit">Apply Filters</button>
+        </form>
+    </div>
+
+    <div class="posts">
+        {{ range .Posts }}
+        <article class="post-card">
+            <h2><a href="/post/{{ .ID }}">{{ .Title }}</a></h2>
+            <div class="post-meta">
+                <span>Author: {{ .Username }}</span>
+                <span>{{ .CreatedAt }}</span>
+            </div>
+            <div class="categories">
+                {{ range .Categories }}
+                    <span class="category-tag">{{ . }}</span>
+                {{ end }}
+            </div>
+            <div class="reactions">
+                <button class="like-btn {{ if .UserLiked }}active{{ end }}" 
+                        data-post-id="{{ .ID }}" 
+                        data-type="like">
+                    👍 {{ .Likes }}
+                </button>
+                <button class="dislike-btn {{ if .UserDisliked }}active{{ end }}" 
+                        data-post-id="{{ .ID }}" 
+                        data-type="dislike">
+                    👎 {{ .Dislikes }}
+                </button>
+            </div>
+        </article>
+        {{ end }}
+    </div>
+</div>
+
+<script src="/static/js/reactions.js"></script>
+<script src="/static/js/filters.js"></script>
+{{ end }}
+
+{{ define "index.html" }}
+    {{ template "header" . }}
+    {{ template "content" . }}
+    {{ template "footer" . }}
+{{ end }} 
