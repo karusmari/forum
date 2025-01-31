@@ -14,9 +14,16 @@ body {
 /* Header styles */
 header {
     background: #333;
+    font-family: Verdana, Geneva, Tahoma, sans-serif; 
     color: white;
     padding: 1rem;
     margin-bottom: 2rem;
+}
+
+a img {
+    width: 200px; /* Muuda vastavalt soovitud suurusele */
+    height: auto; /* Hoia proportsioonid õigena */
+    margin: 1px;
 }
 
 nav {
