@@ -25,6 +25,7 @@ type Post struct {
 	UserLiked    bool      `json:"user_liked"`
 	UserDisliked bool      `json:"user_disliked"`
 	Comments     []Comment `json:"comments"`
+	CommentCount int       `json:"comment_count"`
 }
 
 type Category struct {

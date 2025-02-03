@@ -247,7 +247,6 @@ func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
 }
 
-
 // Добавляем новый обработчик для редактирования комментариев
 func (h *Handler) EditComment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {

@@ -69,18 +69,36 @@
                             <span>{{.Username}}</span>
                             <span>{{.CreatedAt.Format "02 Jan 2006 15:04"}}</span>
                             {{if or (eq .UserID $.User.ID) $.User.IsAdmin}}
-                                <form method="POST" action="/api/comment/delete" style="display: inline;">
-                                    <input type="hidden" name="comment_id" value="{{.ID}}">
-                                    <input type="hidden" name="post_id" value="{{$.Post.ID}}">
-                                    <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this comment?')">
-                                        🗑️ Delete
+                                <div class="comment-actions">
+                                    <button onclick="toggleEditComment({{.ID}})" class="edit-btn">
+                                        ✏️ Edit
                                     </button>
-                                </form>
+                                    <form method="POST" action="/api/comment/delete" style="display: inline;">
+                                        <input type="hidden" name="comment_id" value="{{.ID}}">
+                                        <input type="hidden" name="post_id" value="{{$.Post.ID}}">
+                                        <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this comment?')">
+                                            🗑️ Delete
+                                        </button>
+                                    </form>
+                                </div>
                             {{end}}
                         </div>
-                        <div class="comment-content">
+                        <div class="comment-content" id="comment-content-{{.ID}}">
                             {{.Content}}
                         </div>
+                        {{if or (eq .UserID $.User.ID) $.User.IsAdmin}}
+                            <div class="edit-form" id="edit-form-{{.ID}}" style="display: none;">
+                                <form method="POST" action="/api/comment/edit">
+                                    <input type="hidden" name="comment_id" value="{{.ID}}">
+                                    <input type="hidden" name="post_id" value="{{$.Post.ID}}">
+                                    <textarea name="content" required>{{.Content}}</textarea>
+                                    <div class="button-group">
+                                        <button type="submit">Save</button>
+                                        <button type="button" onclick="toggleEditComment({{.ID}})">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        {{end}}
                         <div class="reactions" id="comment-{{.ID}}">
                             <button onclick="reactToComment({{.ID}}, 'like')" 
                                     class="comment-like-btn {{if .UserLiked}}active{{end}}">
@@ -99,5 +117,6 @@
         </div>
     </div>
     <script src="/static/js/reactions.js"></script>
+    <script src="/static/js/comments.js"></script>
     {{template "footer" .}}
 {{end}} 
