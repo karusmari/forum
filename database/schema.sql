@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS posts (
     content TEXT NOT NULL,
     username TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    likes INTEGER DEFAULT 0,
+    dislikes INTEGER DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -52,6 +54,8 @@ CREATE TABLE IF NOT EXISTS comments (
     content TEXT NOT NULL,
     username TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    likes INTEGER DEFAULT 0,
+    dislikes INTEGER DEFAULT 0,
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -81,10 +85,25 @@ CREATE TABLE IF NOT EXISTS sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Создаем индекс для быстрого поиска по токену
+-- Создаем индексы
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
+CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_reactions_post_id ON reactions(post_id);
+CREATE INDEX IF NOT EXISTS idx_reactions_comment_id ON reactions(comment_id);
 
 -- Добавляем базовые категории
 INSERT OR IGNORE INTO categories (name, description) VALUES 
     ('Studying in Åland', 'Posts about studying in Åland'),
-    ('Culture and leisure in Åland', 'Posts about culture and leisure activities'); 
+    ('Culture and leisure in Åland', 'Posts about culture and leisure activities');
+
+-- В конце файла
+INSERT OR IGNORE INTO categories (name, description) VALUES 
+    ('Moving to Åland', 'Get insights and practical tips on relocating to Åland'),
+    ('Living in Åland', 'Explore all aspects of life in Åland'),
+    ('Housing in Åland', 'Guidance on finding housing in Åland'),
+    ('Studying in Åland', 'Discover everything about studying in Åland'),
+    ('Jobs and entrepreneurship in Åland', 'Information about job opportunities'),
+    ('Family life in Åland', 'Support and resources for families'),
+    ('Culture and leisure in Åland', 'Explore cultural events and activities'),
+    ('For sale and wanted in Åland', 'Browse listings for items'); 
