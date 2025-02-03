@@ -35,17 +35,26 @@
 
     <div class="posts">
         {{ range .Posts }}
-        <article class="post-card">
+        <article class="post-preview">
             <h2><a href="/post/{{ .ID }}">{{ .Title }}</a></h2>
             <div class="post-meta">
-                <span>Author: {{ .Username }}</span>
-                <span>{{ .CreatedAt }}</span>
-            </div>
-            <div class="categories">
-                {{ range .Categories }}
-                    <span class="category-tag">{{ . }}</span>
+                <time>{{ .CreatedAt }}</time>
+                <span class="author">By {{ .Username }}</span>
+                
+                <!-- Добавим отладочный вывод -->
+                <!-- Debug: {{ .Categories }} -->
+                
+                {{ if .Categories }}
+                    <span class="post-categories">
+                        Categories: 
+                        {{ range $index, $category := .Categories }}
+                            {{ if $index }}, {{ end }}
+                            {{ $category }}
+                        {{ end }}
+                    </span>
                 {{ end }}
             </div>
+            
             <div class="reactions">
                 <button class="like-btn {{ if .UserLiked }}active{{ end }}" 
                         data-post-id="{{ .ID }}" 

@@ -2,39 +2,24 @@
     {{template "header" .}}
     <div class="category-page">
         <div class="category-header">
-            {{with index .Categories 0}}
-                <h1>{{.Name}}</h1>
-                <p>{{.Description}}</p>
-            {{end}}
+            <h1>{{ .Category.Name }}</h1>
+            <p>{{ .Category.Description }}</p>
         </div>
 
         <div class="posts">
-            {{if .Posts}}
-                {{range .Posts}}
-                    <article class="post-card">
-                        <h2><a href="/post/{{.ID}}">{{.Title}}</a></h2>
+            {{ if .Posts }}
+                {{ range .Posts }}
+                    <article class="post-preview">
+                        <h2><a href="/post/{{ .ID }}">{{ .Title }}</a></h2>
                         <div class="post-meta">
-                            <span>By {{.Username}}</span>
-                            <span>{{.CreatedAt.Format "02 Jan 2006 15:04"}}</span>
-                        </div>
-                        <p class="post-excerpt">{{.Content}}</p>
-                        <div class="reactions">
-                            <button class="like-btn {{if .UserLiked}}active{{end}}" 
-                                    data-post-id="{{.ID}}" 
-                                    data-type="like">
-                                👍 {{.Likes}}
-                            </button>
-                            <button class="dislike-btn {{if .UserDisliked}}active{{end}}" 
-                                    data-post-id="{{.ID}}" 
-                                    data-type="dislike">
-                                👎 {{.Dislikes}}
-                            </button>
+                            <time>{{ .CreatedAt }}</time>
+                            <span class="author">By {{ .Username }}</span>
                         </div>
                     </article>
-                {{end}}
-            {{else}}
+                {{ end }}
+            {{ else }}
                 <p class="no-posts">No posts in this category yet.</p>
-            {{end}}
+            {{ end }}
         </div>
     </div>
     <script src="/static/js/reactions.js"></script>

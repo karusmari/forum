@@ -4,8 +4,29 @@
         <article class="post-full">
             <h1>{{.Post.Title}}</h1>
             <div class="post-meta">
-                <span>By {{.Post.Username}}</span>
-                <span>{{.Post.CreatedAt.Format "02 Jan 2006 15:04"}}</span>
+                <time>{{ .Post.CreatedAt }}</time>
+                <span class="author">By {{ .Post.Username }}</span>
+                
+                {{ if .Post.Categories }}
+                    <span class="post-categories">
+                        {{ range $index, $category := .Post.Categories }}
+                            {{ if $index }}, {{ end }}
+                            <a href="/categories#{{ $category | urlquery }}">{{ $category }}</a>
+                        {{ end }}
+                    </span>
+                {{ end }}
+
+                {{if or (eq .Post.UserID $.User.ID) $.User.IsAdmin}}
+                    <div class="post-actions">
+                        <a href="/post/edit/{{.Post.ID}}" class="edit-btn">✏️ Edit</a>
+                        <form method="POST" action="/api/post/delete" style="display: inline;">
+                            <input type="hidden" name="post_id" value="{{.Post.ID}}">
+                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this post? This action cannot be undone.')">
+                                🗑️ Delete
+                            </button>
+                        </form>
+                    </div>
+                {{end}}
             </div>
             <div class="post-content">
                 {{.Post.Content}}
@@ -29,38 +50,56 @@
                 <h3>Add Comment</h3>
                 <form method="POST" action="/api/comment">
                     <input type="hidden" name="post_id" value="{{.Post.ID}}">
-                    <textarea name="content" required placeholder="Write your comment here" aria-label="Comment content"></textarea>
+                    <textarea name="content" required placeholder="Write your comment here"></textarea>
                     <button type="submit">Submit</button>
                 </form>
+            </div>
+        {{else}}
+            <div class="login-prompt">
+                <p>Please <a href="/login">log in</a> to add comments.</p>
             </div>
         {{end}}
 
         <div class="comments">
             <h3>Comments</h3>
-            {{range .Comments}}
-                <div class="comment">
-                    <div class="comment-meta">
-                        <span>{{.Username}}</span>
-                        <span>{{.CreatedAt.Format "02 Jan 2006 15:04"}}</span>
+            {{if .Comments}}
+                {{range .Comments}}
+                    <div class="comment">
+                        <div class="comment-meta">
+                            <span>{{.Username}}</span>
+                            <span>{{.CreatedAt.Format "02 Jan 2006 15:04"}}</span>
+                            {{if or (eq .UserID $.User.ID) $.User.IsAdmin}}
+                                <form method="POST" action="/api/comment/delete" style="display: inline;">
+                                    <input type="hidden" name="comment_id" value="{{.ID}}">
+                                    <input type="hidden" name="post_id" value="{{$.Post.ID}}">
+                                    <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this comment?')">
+                                        🗑️ Delete
+                                    </button>
+                                </form>
+                            {{end}}
+                        </div>
+                        <div class="comment-content">
+                            {{.Content}}
+                        </div>
+                        <div class="reactions">
+                            <button class="like-btn {{if .UserLiked}}active{{end}}" 
+                                    data-comment-id="{{.ID}}" 
+                                    data-type="like">
+                                👍 {{.Likes}}
+                            </button>
+                            <button class="dislike-btn {{if .UserDisliked}}active{{end}}" 
+                                    data-comment-id="{{.ID}}" 
+                                    data-type="dislike">
+                                👎 {{.Dislikes}}
+                            </button>
+                        </div>
                     </div>
-                    <div class="comment-content">
-                        {{.Content}}
-                    </div>
-                    <div class="reactions">
-                        <button class="like-btn {{if .UserLiked}}active{{end}}" 
-                                data-comment-id="{{.ID}}" 
-                                data-type="like">
-                            👍 {{.Likes}}
-                        </button>
-                        <button class="dislike-btn {{if .UserDisliked}}active{{end}}" 
-                                data-comment-id="{{.ID}}" 
-                                data-type="dislike">
-                            👎 {{.Dislikes}}
-                        </button>
-                    </div>
-                </div>
+                {{end}}
+            {{else}}
+                <p>No comments yet.</p>
             {{end}}
         </div>
     </div>
+    <script src="/static/js/reactions.js"></script>
     {{template "footer" .}}
 {{end}} 

@@ -1,6 +1,8 @@
 package handlers
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
 	ID           int64  `json:"id"`
@@ -22,6 +24,7 @@ type Post struct {
 	Dislikes     int       `json:"dislikes"`
 	UserLiked    bool      `json:"user_liked"`
 	UserDisliked bool      `json:"user_disliked"`
+	Comments     []Comment `json:"comments"`
 }
 
 type Category struct {
@@ -49,8 +52,10 @@ type TemplateData struct {
 	Post             *Post
 	Posts            []Post
 	Categories       []Category
+	Category         *Category
 	Error            string
 	SelectedCategory int64
 	ShowMyPosts      bool
 	ShowLikedPosts   bool
+	Comments         []Comment
 }

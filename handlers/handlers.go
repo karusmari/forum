@@ -3,20 +3,33 @@ package handlers
 import (
 	"database/sql"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Handler struct {
 	db        *sql.DB
-	templates *template.Template // Шаблоны страниц
+	templates *template.Template
 }
 
 func NewHandler(db *sql.DB) *Handler {
+	funcMap := template.FuncMap{
+		"timezone": func(name string) *time.Location {
+			loc, err := time.LoadLocation(name)
+			if err != nil {
+				return time.UTC
+			}
+			return loc
+		},
+	}
+
+	tmpl := template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*.html"))
 	return &Handler{
 		db:        db,
-		templates: template.Must(template.ParseGlob("templates/*.html")),
+		templates: tmpl,
 	}
 }
 
@@ -86,13 +99,12 @@ func (h *Handler) getCategories() ([]Category, error) {
 func (h *Handler) getPosts(r *http.Request) ([]Post, error) {
 	query := `
 		SELECT DISTINCT p.id, p.user_id, p.title, p.content, p.created_at,
-			   u.username,
+			   p.username,
 			   COUNT(DISTINCT CASE WHEN r.type = 'like' THEN r.id END) as likes,
 			   COUNT(DISTINCT CASE WHEN r.type = 'dislike' THEN r.id END) as dislikes
 		FROM posts p
-		JOIN users u ON p.user_id = u.id
-		JOIN post_categories pc ON p.id = pc.post_id
 		LEFT JOIN reactions r ON p.id = r.post_id
+		LEFT JOIN post_categories pc ON p.id = pc.post_id
 	`
 
 	var conditions []string
@@ -105,56 +117,81 @@ func (h *Handler) getPosts(r *http.Request) ([]Post, error) {
 		args = append(args, categoryID)
 	}
 
-	// Фильтры для авторизованного пользователя
-	if user := h.GetSessionUser(r); user != nil {
-		if r.URL.Query().Get("my_posts") == "true" {
+	// Фильтр по моим постам
+	if r.URL.Query().Get("my_posts") == "true" {
+		user := h.GetSessionUser(r)
+		if user != nil {
 			conditions = append(conditions, "p.user_id = ?")
 			args = append(args, user.ID)
 		}
-		if r.URL.Query().Get("liked_posts") == "true" {
+	}
+
+	// Фильтр по лайкнутым постам
+	if r.URL.Query().Get("liked_posts") == "true" {
+		user := h.GetSessionUser(r)
+		if user != nil {
 			conditions = append(conditions, "EXISTS (SELECT 1 FROM reactions r2 WHERE r2.post_id = p.id AND r2.user_id = ? AND r2.type = 'like')")
 			args = append(args, user.ID)
 		}
 	}
 
-	// Добавляем условия к запросу
+	// Добавляем условия в запрос
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
 	// Группировка и сортировка
-	query += " GROUP BY p.id ORDER BY p.created_at DESC"
+	query += `
+		GROUP BY p.id, p.user_id, p.title, p.content, p.created_at, p.username
+		ORDER BY p.created_at DESC
+	`
 
 	// Выполняем запрос
 	rows, err := h.db.Query(query, args...)
 	if err != nil {
+		log.Printf("Error querying posts: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
 
 	var posts []Post
-	currentUser := h.GetSessionUser(r)
-
 	for rows.Next() {
-		var p Post
-		if err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.Content, &p.CreatedAt,
-			&p.Username, &p.Likes, &p.Dislikes); err != nil {
-			return nil, err
-		}
-
-		// Проверяем реакции текущего пользователя
-		if currentUser != nil {
-			p.UserLiked = h.hasUserReaction(currentUser.ID, p.ID, "like")
-			p.UserDisliked = h.hasUserReaction(currentUser.ID, p.ID, "dislike")
-		}
-
-		// Получаем категории поста
-		p.Categories, err = h.getPostCategories(p.ID)
+		var post Post
+		err := rows.Scan(
+			&post.ID,
+			&post.UserID,
+			&post.Title,
+			&post.Content,
+			&post.CreatedAt,
+			&post.Username,
+			&post.Likes,
+			&post.Dislikes,
+		)
 		if err != nil {
-			return nil, err
+			log.Printf("Error scanning post: %v", err)
+			continue
 		}
 
-		posts = append(posts, p)
+		// Получаем категории для поста
+		post.Categories, err = h.getPostCategories(post.ID)
+		if err != nil {
+			log.Printf("Error getting categories for post %d: %v", post.ID, err)
+			continue
+		}
+
+		// Проверяем реакции пользователя
+		user := h.GetSessionUser(r)
+		if user != nil {
+			post.UserLiked = h.hasUserReaction(user.ID, post.ID, "like")
+			post.UserDisliked = h.hasUserReaction(user.ID, post.ID, "dislike")
+		}
+
+		posts = append(posts, post)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Error iterating posts: %v", err)
+		return nil, err
 	}
 
 	return posts, nil
@@ -206,109 +243,6 @@ func (h *Handler) Categories(w http.ResponseWriter, r *http.Request) {
 	h.templates.ExecuteTemplate(w, "categories.html", data)
 }
 
-func (h *Handler) GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
-	categoryID := strings.TrimPrefix(r.URL.Path, "/category/")
-
-	// Проверяем, что ID является числом
-	if categoryID == "" {
-		http.Error(w, "Invalid category ID", http.StatusBadRequest)
-		return
-	}
-
-	// Получаем информацию о категории
-	var category Category
-	err := h.db.QueryRow(`
-		SELECT id, name, description 
-		FROM categories 
-		WHERE id = ?
-	`, categoryID).Scan(&category.ID, &category.Name, &category.Description)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			http.Error(w, "Category not found", http.StatusNotFound)
-		} else {
-			http.Error(w, "Database error", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Получаем посты для этой категории
-	query := `
-		SELECT DISTINCT p.id, p.user_id, p.title, p.content, p.created_at,
-			   u.username,
-			   COUNT(DISTINCT CASE WHEN r.type = 'like' THEN r.id END) as likes,
-			   COUNT(DISTINCT CASE WHEN r.type = 'dislike' THEN r.id END) as dislikes
-		FROM posts p
-		JOIN users u ON p.user_id = u.id
-		JOIN post_categories pc ON p.id = pc.post_id
-		LEFT JOIN reactions r ON p.id = r.post_id
-		WHERE pc.category_id = ?
-		GROUP BY p.id
-		ORDER BY p.created_at DESC
-	`
-
-	rows, err := h.db.Query(query, categoryID)
-	if err != nil {
-		http.Error(w, "Error loading posts", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	var posts []Post
-	currentUser := h.GetSessionUser(r)
-
-	for rows.Next() {
-		var p Post
-		if err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.Content, &p.CreatedAt,
-			&p.Username, &p.Likes, &p.Dislikes); err != nil {
-			http.Error(w, "Error scanning posts", http.StatusInternalServerError)
-			return
-		}
-
-		// Проверяем реакции текущего пользователя
-		if currentUser != nil {
-			p.UserLiked = h.hasUserReaction(currentUser.ID, p.ID, "like")
-			p.UserDisliked = h.hasUserReaction(currentUser.ID, p.ID, "dislike")
-		}
-
-		// Получаем категории поста
-		p.Categories, err = h.getPostCategories(p.ID)
-		if err != nil {
-			http.Error(w, "Error loading categories", http.StatusInternalServerError)
-			return
-		}
-
-		posts = append(posts, p)
-	}
-
-	data := &TemplateData{
-		Title:      category.Name,
-		User:       currentUser,
-		Posts:      posts,
-		Categories: []Category{category},
-	}
-
-	if err := h.templates.ExecuteTemplate(w, "category.html", data); err != nil {
-		http.Error(w, "Error rendering template", http.StatusInternalServerError)
-	}
-}
-
-// Вспомогательная функция для проверки реакции пользователя
-func (h *Handler) hasUserReaction(userID int64, postID int64, reactionType string) bool {
-	var exists bool
-	err := h.db.QueryRow(`
-		SELECT EXISTS(
-			SELECT 1 FROM reactions 
-			WHERE user_id = ? AND post_id = ? AND type = ?
-		)
-	`, userID, postID, reactionType).Scan(&exists)
-
-	if err != nil {
-		return false
-	}
-	return exists
-}
-
 func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	user := h.GetSessionUser(r)
 	if user == nil {
@@ -348,16 +282,18 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	// Создаем пост
 	result, err := h.db.Exec(`
-		INSERT INTO posts (user_id, title, content)
-		VALUES (?, ?, ?)
-	`, user.ID, title, content)
+		INSERT INTO posts (user_id, title, content, username)
+		SELECT ?, ?, ?, username FROM users WHERE id = ?
+	`, user.ID, title, content, user.ID)
 	if err != nil {
+		log.Printf("Error creating post: %v", err)
 		http.Error(w, "Error creating post", http.StatusInternalServerError)
 		return
 	}
 
 	postID, err := result.LastInsertId()
 	if err != nil {
+		log.Printf("Error getting post ID: %v", err)
 		http.Error(w, "Error getting post ID", http.StatusInternalServerError)
 		return
 	}
@@ -369,8 +305,8 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 			VALUES (?, ?)
 		`, postID, categoryID)
 		if err != nil {
-			http.Error(w, "Error adding categories", http.StatusInternalServerError)
-			return
+			log.Printf("Error adding category %s to post %d: %v", categoryID, postID, err)
+			continue
 		}
 	}
 
@@ -378,11 +314,14 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
+	// Получаем ID поста из URL
 	postID := strings.TrimPrefix(r.URL.Path, "/post/")
 	if postID == "" {
+		log.Printf("Empty post ID")
 		http.Error(w, "Invalid post ID", http.StatusBadRequest)
 		return
 	}
+	log.Printf("Getting post with ID: %s", postID)
 
 	var post Post
 	err := h.db.QueryRow(`
@@ -394,14 +333,18 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 		JOIN users u ON p.user_id = u.id
 		LEFT JOIN reactions r ON p.id = r.post_id
 		WHERE p.id = ?
-		GROUP BY p.id
-	`, postID).Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt,
-		&post.Username, &post.Likes, &post.Dislikes)
+		GROUP BY p.id, p.user_id, p.title, p.content, p.created_at, u.username
+	`, postID).Scan(
+		&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt,
+		&post.Username, &post.Likes, &post.Dislikes,
+	)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
+			log.Printf("Post not found: %s", postID)
 			http.Error(w, "Post not found", http.StatusNotFound)
 		} else {
+			log.Printf("Database error: %v", err)
 			http.Error(w, "Database error", http.StatusInternalServerError)
 		}
 		return
@@ -410,54 +353,206 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	// Получаем категории поста
 	post.Categories, err = h.getPostCategories(post.ID)
 	if err != nil {
+		log.Printf("Error getting categories: %v", err)
 		http.Error(w, "Error loading categories", http.StatusInternalServerError)
 		return
 	}
 
-	data := &TemplateData{
-		Title: post.Title,
-		User:  h.GetSessionUser(r),
-		Post:  &post,
+	// Получаем комментарии к посту
+	log.Printf("Getting comments for post %s", postID)
+	var comments []Comment
+	rows, err := h.db.Query(`
+		SELECT c.id, c.user_id, c.content, c.created_at, c.username,
+			   COUNT(CASE WHEN r.type = 'like' THEN 1 END) as likes,
+			   COUNT(CASE WHEN r.type = 'dislike' THEN 1 END) as dislikes
+		FROM comments c
+		LEFT JOIN reactions r ON c.id = r.comment_id
+		WHERE c.post_id = ?
+		GROUP BY c.id, c.user_id, c.content, c.created_at, c.username
+		ORDER BY c.created_at DESC
+	`, postID)
+
+	if err != nil {
+		log.Printf("Error getting comments: %v", err)
+	} else {
+		defer rows.Close()
+		for rows.Next() {
+			var c Comment
+			err := rows.Scan(&c.ID, &c.UserID, &c.Content, &c.CreatedAt, &c.Username, &c.Likes, &c.Dislikes)
+			if err != nil {
+				log.Printf("Error scanning comment: %v", err)
+				continue
+			}
+			comments = append(comments, c)
+		}
+		log.Printf("Found %d comments for post %s", len(comments), postID)
 	}
 
-	h.templates.ExecuteTemplate(w, "post.html", data)
+	// Проверяем, существует ли пост
+	var exists bool
+	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM posts WHERE id = ?)", postID).Scan(&exists)
+	if err != nil {
+		log.Printf("Error checking post existence: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if !exists {
+		log.Printf("Post %s does not exist", postID)
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	data := &TemplateData{
+		Title:    post.Title,
+		User:     h.GetSessionUser(r),
+		Post:     &post,
+		Comments: comments,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "post.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Error rendering page", http.StatusInternalServerError)
+	}
 }
 
-func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+func (h *Handler) hasUserReaction(userID int64, postID int64, reactionType string) bool {
+	var exists bool
+	err := h.db.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM reactions 
+			WHERE user_id = ? AND post_id = ? AND type = ?
+		)
+	`, userID, postID, reactionType).Scan(&exists)
+
+	if err != nil {
+		return false
+	}
+	return exists
+}
+
+func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
+	// Получаем ID поста из URL
+	postID := strings.TrimPrefix(r.URL.Path, "/post/edit/")
+	if postID == "" {
+		log.Printf("Empty post ID")
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
 		return
 	}
 
 	user := h.GetSessionUser(r)
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
+	// Получаем информацию о посте
+	var post Post
+	err := h.db.QueryRow(`
+		SELECT p.id, p.user_id, p.title, p.content, p.created_at,
+			   p.username
+		FROM posts p
+		WHERE p.id = ?
+	`, postID).Scan(
+		&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt,
+		&post.Username,
+	)
+
+	if err != nil {
+		log.Printf("Error getting post: %v", err)
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Проверяем права на редактирование
+	if post.UserID != user.ID && !user.IsAdmin {
+		http.Error(w, "Not authorized to edit this post", http.StatusForbidden)
+		return
+	}
+
+	if r.Method == http.MethodGet {
+		// Получаем все категории
+		categories, err := h.getCategories()
+		if err != nil {
+			http.Error(w, "Error loading categories", http.StatusInternalServerError)
+			return
+		}
+
+		// Получаем выбранные категории поста
+		post.Categories, err = h.getPostCategories(post.ID)
+		if err != nil {
+			http.Error(w, "Error loading post categories", http.StatusInternalServerError)
+			return
+		}
+
+		data := &TemplateData{
+			Title:      "Edit Post",
+			User:       user,
+			Post:       &post,
+			Categories: categories,
+		}
+		h.templates.ExecuteTemplate(w, "edit_post.html", data)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Обработка POST запроса
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
-	postID := r.FormValue("post_id")
-	reactionType := r.FormValue("type")
-
-	if reactionType != "like" && reactionType != "dislike" {
-		http.Error(w, "Invalid reaction type", http.StatusBadRequest)
+	// Начинаем транзакцию
+	tx, err := h.db.Begin()
+	if err != nil {
+		log.Printf("Error starting transaction: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
+	defer tx.Rollback()
 
-	_, err := h.db.Exec(`
-		INSERT INTO reactions (user_id, post_id, type)
-		VALUES (?, ?, ?)
-		ON CONFLICT(user_id, post_id) DO UPDATE SET type = ?
-	`, user.ID, postID, reactionType, reactionType)
+	// Обновляем пост
+	_, err = tx.Exec(`
+		UPDATE posts 
+		SET title = ?, content = ?
+		WHERE id = ?
+	`, r.FormValue("title"), r.FormValue("content"), postID)
 
 	if err != nil {
-		http.Error(w, "Error saving reaction", http.StatusInternalServerError)
+		log.Printf("Error updating post: %v", err)
+		http.Error(w, "Error updating post", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	// Удаляем старые категории
+	_, err = tx.Exec("DELETE FROM post_categories WHERE post_id = ?", postID)
+	if err != nil {
+		log.Printf("Error deleting old categories: %v", err)
+		http.Error(w, "Error updating categories", http.StatusInternalServerError)
+		return
+	}
+
+	// Добавляем новые категории
+	for _, categoryID := range r.Form["categories"] {
+		_, err = tx.Exec(`
+			INSERT INTO post_categories (post_id, category_id)
+			VALUES (?, ?)
+		`, postID, categoryID)
+		if err != nil {
+			log.Printf("Error adding category %s to post %s: %v", categoryID, postID, err)
+			continue
+		}
+	}
+
+	// Завершаем транзакцию
+	if err := tx.Commit(); err != nil {
+		log.Printf("Error committing transaction: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
 }

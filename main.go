@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -101,7 +102,6 @@ func initCategories(db *sql.DB) error {
 		{"Family life in Åland", "Support and resources for families in Åland, including schooling, childcare, language education, and family-friendly activities. Connect with other families and share experiences."},
 		{"Culture and leisure in Åland", "Explore cultural events, leisure activities, and entertainment options in Åland. Find out about local festivals, museums, outdoor activities, and ways to enjoy your free time."},
 		{"For sale and wanted in Åland", "Browse listings for items for sale, trades, and wanted ads in Åland. Whether you're buying or selling, find a variety of goods and services available in the local community."},
-		
 	}
 
 	for _, cat := range categories {
@@ -119,34 +119,37 @@ func initCategories(db *sql.DB) error {
 }
 
 func main() {
-	db, err := sql.Open("sqlite3", "./forum.db")
+	// Добавляем параметр _loc=auto для использования локального времени
+	db, err := sql.Open("sqlite3", "./forum.db?_loc=auto")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Eemalda kõik olemasolevad kategooriad enne uute lisamist
-	_, err = db.Exec("DELETE FROM categories")
+	// Устанавливаем часовой пояс UTC+2
+	_, err = db.Exec("PRAGMA timezone = '+02:00'")
 	if err != nil {
-		log.Fatal("Error clearing categories:", err)
+		log.Fatal("Error setting timezone:", err)
 	}
 
-	// Initialize database schema
-	if err := initDB(db); err != nil {
-		log.Fatal(err)
-	}
+	// Инициализируем базу данных только если она не существует
+	if _, err := os.Stat("./forum.db"); os.IsNotExist(err) {
+		log.Println("Initializing new database...")
 
-	// Initialize default categories
-	if err := initCategories(db); err != nil {
-		log.Fatal(err)
-	}
+		// Инициализируем схему базы данных
+		if err := handlers.InitDB(db); err != nil {
+			log.Fatal("Failed to initialize database:", err)
+		}
 
-	// Check database
-	checkDB(db)
+		// Добавляем базовые категории
+		if err := initCategories(db); err != nil {
+			log.Fatal("Failed to initialize categories:", err)
+		}
 
-	// Add test data
-	if err := addTestData(db); err != nil {
-		log.Printf("Error adding test data: %v", err)
+		// Добавляем тестовые данные только для новой базы
+		if err := addTestData(db); err != nil {
+			log.Printf("Error adding test data: %v", err)
+		}
 	}
 
 	// Create handlers
@@ -161,13 +164,18 @@ func main() {
 	http.HandleFunc("/logout", h.LogoutHandler)
 	http.HandleFunc("/post/new", h.CreatePost)
 	http.HandleFunc("/post/", h.GetPost)
-	http.HandleFunc("/category/", h.GetPostsByCategory)
+	http.HandleFunc("/category/", h.CategoryHandler)
 	http.HandleFunc("/api/react", h.ReactToPost)
+	http.HandleFunc("/api/comment", h.AddComment)
+	http.HandleFunc("/api/comment/delete", h.DeleteComment)
+	http.HandleFunc("/api/post/delete", h.DeletePost)
+	http.HandleFunc("/post/edit/", h.EditPost)
+	http.HandleFunc("/api/comment/react", h.ReactToComment)
 
 	// Serve static files
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	log.Println("Server starting on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("Server running on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil)) // Logs the error and exits.
 }

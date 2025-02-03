@@ -49,8 +49,43 @@ nav {
 
 .post-meta {
     color: #666;
-    font-size: 0.9rem;
-    margin: 0.5rem 0;
+    font-size: 0.9em;
+    margin-bottom: 1em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.post-categories {
+    margin-left: 10px;
+    display: inline-block;
+    color: #666;
+}
+
+.post-categories:before {
+    content: "Categories: ";
+    font-weight: bold;
+}
+
+/* Если вы хотите сделать категории кликабельными */
+.post-categories a {
+    color: #666;
+    text-decoration: none;
+}
+
+.post-categories a:hover {
+    text-decoration: underline;
+}
+
+/* Стили для автора */
+.author {
+    color: #666;
+}
+
+/* Стили для времени */
+.post-meta time {
+    color: #666;
 }
 
 /* Form styles */
@@ -75,13 +110,20 @@ select, button {
 .reactions button {
     background: none;
     border: 1px solid #ddd;
-    padding: 0.5rem 1rem;
-    margin-right: 1rem;
+    padding: 5px 10px;
+    margin-right: 10px;
     cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
 }
 
 .reactions button.active {
-    background: #e0e0e0;
+    background-color: #e0e0e0;
+    border-color: #999;
+}
+
+.reactions button:hover {
+    background-color: #f0f0f0;
 }
 
 /* Auth forms */
@@ -291,4 +333,61 @@ select, button {
     text-align: center;
     padding: 2rem;
     color: #666;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #ff4444;
+    cursor: pointer;
+    padding: 2px 5px;
+    font-size: 0.9em;
+}
+
+.delete-btn:hover {
+    color: #ff0000;
+}
+
+.post-actions {
+    display: inline-flex;
+    gap: 1rem;
+    margin-left: 1rem;
+}
+
+.edit-btn {
+    color: #4444ff;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 2px 5px;
+    font-size: 0.9em;
+}
+
+.edit-btn:hover {
+    color: #0000ff;
+}
+
+.post-actions .delete-btn {
+    color: #ff4444;
+}
+
+.post-actions .delete-btn:hover {
+    color: #ff0000;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    margin: 1rem 0;
+}
+
+.remember-me input[type="checkbox"] {
+    margin-right: 0.5rem;
+    width: auto;
+}
+
+.remember-me label {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    cursor: pointer;
 } 
