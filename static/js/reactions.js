@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Обработчик для кнопок реакций
-    document.querySelectorAll('.like-btn, .dislike-btn').forEach(button => {
+    // Обработчик только для кнопок реакций постов
+    document.querySelectorAll('.like-btn:not(.comment-like-btn), .dislike-btn:not(.comment-dislike-btn)').forEach(button => {
         button.addEventListener('click', async function(e) {
             e.preventDefault();
 
@@ -40,4 +40,38 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-}); 
+});
+
+// Для реакций на посты
+function reactToPost(postId, type) {
+    fetch('/api/react', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `post_id=${postId}&type=${type}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.querySelector(`#post-${postId} .likes-count`).textContent = data.likes;
+        document.querySelector(`#post-${postId} .dislikes-count`).textContent = data.dislikes;
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Добавляем новую функцию для реакций на комментарии
+function reactToComment(commentId, type) {
+    fetch('/api/comment/react', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `comment_id=${commentId}&type=${type}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.querySelector(`#comment-${commentId} .likes-count`).textContent = data.likes;
+        document.querySelector(`#comment-${commentId} .dislikes-count`).textContent = data.dislikes;
+    })
+    .catch(error => console.error('Error:', error));
+} 

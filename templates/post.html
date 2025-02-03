@@ -81,16 +81,14 @@
                         <div class="comment-content">
                             {{.Content}}
                         </div>
-                        <div class="reactions">
-                            <button class="like-btn {{if .UserLiked}}active{{end}}" 
-                                    data-comment-id="{{.ID}}" 
-                                    data-type="like">
-                                👍 {{.Likes}}
+                        <div class="reactions" id="comment-{{.ID}}">
+                            <button onclick="reactToComment({{.ID}}, 'like')" 
+                                    class="comment-like-btn {{if .UserLiked}}active{{end}}">
+                                👍 <span class="likes-count">{{.Likes}}</span>
                             </button>
-                            <button class="dislike-btn {{if .UserDisliked}}active{{end}}" 
-                                    data-comment-id="{{.ID}}" 
-                                    data-type="dislike">
-                                👎 {{.Dislikes}}
+                            <button onclick="reactToComment({{.ID}}, 'dislike')" 
+                                    class="comment-dislike-btn {{if .UserDisliked}}active{{end}}">
+                                👎 <span class="dislikes-count">{{.Dislikes}}</span>
                             </button>
                         </div>
                     </div>

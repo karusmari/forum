@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -137,35 +138,71 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
-		return
-	}
-
-	commentID, err := strconv.ParseInt(r.FormValue("comment_id"), 10, 64)
-	if err != nil {
-		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
-		return
-	}
-
+	commentID := r.FormValue("comment_id")
 	reactionType := r.FormValue("type")
+
 	if reactionType != "like" && reactionType != "dislike" {
 		http.Error(w, "Invalid reaction type", http.StatusBadRequest)
 		return
 	}
 
-	_, err = h.db.Exec(`
-        INSERT INTO reactions (user_id, comment_id, type)
-        VALUES (?, ?, ?)
-        ON CONFLICT(user_id, comment_id) DO UPDATE SET type = ?
-    `, user.ID, commentID, reactionType, reactionType)
-
+	// Начинаем транзакцию
+	tx, err := h.db.Begin()
 	if err != nil {
+		log.Printf("Error starting transaction: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	// Удаляем существующую реакцию, если есть
+	_, err = tx.Exec(`
+		DELETE FROM reactions 
+		WHERE user_id = ? AND comment_id = ?
+	`, user.ID, commentID)
+	if err != nil {
+		log.Printf("Error removing old reaction: %v", err)
 		http.Error(w, "Error saving reaction", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	// Добавляем новую реакцию
+	_, err = tx.Exec(`
+		INSERT INTO reactions (user_id, comment_id, type)
+		VALUES (?, ?, ?)
+	`, user.ID, commentID, reactionType)
+	if err != nil {
+		log.Printf("Error adding new reaction: %v", err)
+		http.Error(w, "Error saving reaction", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Printf("Error committing transaction: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Возвращаем обновленное количество реакций
+	var likes, dislikes int
+	err = h.db.QueryRow(`
+		SELECT 
+			COUNT(CASE WHEN type = 'like' THEN 1 END) as likes,
+			COUNT(CASE WHEN type = 'dislike' THEN 1 END) as dislikes
+		FROM reactions
+		WHERE comment_id = ?
+	`, commentID).Scan(&likes, &dislikes)
+	if err != nil {
+		log.Printf("Error getting reaction counts: %v", err)
+		http.Error(w, "Error getting reaction counts", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"likes":    likes,
+		"dislikes": dislikes,
+	})
 }
 
 func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
