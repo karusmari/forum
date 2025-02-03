@@ -246,3 +246,52 @@ func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	// Перенаправляем обратно на страницу поста
 	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
 }
+
+// Добавляем новый обработчик для редактирования комментариев
+func (h *Handler) EditComment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user := h.GetSessionUser(r)
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
+	}
+
+	commentID := r.FormValue("comment_id")
+	postID := r.FormValue("post_id")
+	newContent := r.FormValue("content")
+
+	// Проверяем, что пользователь имеет право редактировать комментарий
+	var userID int64
+	err := h.db.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&userID)
+	if err != nil {
+		log.Printf("Error checking comment ownership: %v", err)
+		http.Error(w, "Comment not found", http.StatusNotFound)
+		return
+	}
+
+	// Разрешаем редактирование только владельцу комментария или админу
+	if userID != user.ID && !user.IsAdmin {
+		http.Error(w, "Not authorized to edit this comment", http.StatusForbidden)
+		return
+	}
+
+	// Обновляем комментарий
+	_, err = h.db.Exec("UPDATE comments SET content = ? WHERE id = ?", newContent, commentID)
+	if err != nil {
+		log.Printf("Error updating comment: %v", err)
+		http.Error(w, "Error updating comment", http.StatusInternalServerError)
+		return
+	}
+
+	// Перенаправляем обратно на страницу поста
+	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
+}

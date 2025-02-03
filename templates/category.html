@@ -14,6 +14,12 @@
                         <div class="post-meta">
                             <time>{{ .CreatedAt }}</time>
                             <span class="author">By {{ .Username }}</span>
+                            
+                            <span class="comment-count">
+                                <a href="/post/{{ .ID }}#comments">
+                                    💬 {{ .CommentCount }} {{ if eq .CommentCount 1 }}comment{{ else }}comments{{ end }}
+                                </a>
+                            </span>
                         </div>
                     </article>
                 {{ end }}

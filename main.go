@@ -207,7 +207,7 @@ func main() {
 	h := handlers.NewHandler(db)
 
 	// Setup routes
-	http.HandleFunc("/", h.Home)
+	http.HandleFunc("/", h.HomeHandler)
 	http.HandleFunc("/categories", h.Categories)
 	http.HandleFunc("/rules", h.Rules)
 	http.HandleFunc("/register", h.SignUp)
@@ -222,6 +222,7 @@ func main() {
 	http.HandleFunc("/api/post/delete", h.DeletePost)
 	http.HandleFunc("/post/edit/", h.EditPost)
 	http.HandleFunc("/api/comment/react", h.ReactToComment)
+	http.HandleFunc("/api/comment/edit", h.EditComment)
 
 	// Serve static files
 	fs := http.FileServer(http.Dir("static"))
