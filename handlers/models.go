@@ -48,15 +48,22 @@ type Comment struct {
 }
 
 type TemplateData struct {
-	Title            string
 	User             *User
 	Post             *Post
 	Posts            []Post
 	Categories       []Category
 	Category         *Category
-	Error            string
+	Comments         []*Comment
+	CommentDataList  []CommentData
 	SelectedCategory int64
 	ShowMyPosts      bool
 	ShowLikedPosts   bool
-	Comments         []Comment
+	Title            string
+	Error            string
+}
+
+type CommentData struct {
+	Comment *Comment
+	User    *User
+	Post    *Post
 }

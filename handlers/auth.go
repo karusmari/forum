@@ -134,8 +134,8 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		data := &TemplateData{
-			Title: "Register",
+		data := TemplateData{
+			Title: "Sign Up",
 		}
 		h.templates.ExecuteTemplate(w, "register.html", data)
 		return
@@ -146,85 +146,71 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
-		return
-	}
-
-	username := r.FormValue("username")
+	// Получаем данные из формы
 	email := r.FormValue("email")
+	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	// Хешируем пароль
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	// Проверяем, существует ли уже пользователь с таким email
+	var exists bool
+	err := h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)", email).Scan(&exists)
 	if err != nil {
-		http.Error(w, "Password processing error", http.StatusInternalServerError)
-		return
-	}
-
-	// Проверяем, есть ли уже пользователи в системе
-	var userCount int
-	err = h.db.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount)
-	if err != nil {
+		log.Printf("Error checking email existence: %v", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	// Если это первый пользователь, делаем его админом
-	isAdmin := userCount == 0
+	if exists {
+		data := TemplateData{
+			Title: "Sign Up",
+			Error: "This email address is already registered",
+		}
+		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
+			log.Printf("Template error: %v", err)
+			http.Error(w, "Error rendering page", http.StatusInternalServerError)
+		}
+		return
+	}
 
-	// Сохраняем пользователя в базу и получаем его ID
-	result, err := h.db.Exec(`
-		INSERT INTO users (email, username, password_hash, is_admin)
-		VALUES (?, ?, ?, ?)
-	`, email, username, string(hashedPassword), isAdmin)
-
+	// Проверяем, существует ли пользователь с таким username
+	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = ?)", username).Scan(&exists)
 	if err != nil {
-		data := &TemplateData{
-			Title: "Register",
-			Error: "User already exists",
+		log.Printf("Error checking username existence: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if exists {
+		data := TemplateData{
+			Title: "Sign Up",
+			Error: "This username is already taken",
 		}
 		h.templates.ExecuteTemplate(w, "register.html", data)
 		return
 	}
 
-	// Получаем ID нового пользователя
-	userID, err := result.LastInsertId()
+	// Хешируем пароль
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("Error getting new user ID: %v", err)
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		log.Printf("Error hashing password: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	// После успешной регистрации, если выбрана опция "Remember me",
-	// сразу создаем сессию
-	if r.FormValue("remember_me") == "true" {
-		sessionToken := uuid.New().String()
-		expiresAt := time.Now().Add(30 * 24 * time.Hour)
+	// Создаем нового пользователя
+	_, err = h.db.Exec(`
+		INSERT INTO users (email, username, password_hash)
+		VALUES (?, ?, ?)
+	`, email, username, string(hashedPassword))
 
-		_, err = h.db.Exec(`
-			INSERT INTO sessions (token, user_id, expires_at)
-			VALUES (?, ?, ?)
-		`, sessionToken, userID, expiresAt)
-
-		if err != nil {
-			log.Printf("Error creating session: %v", err)
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
-
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_token",
-			Value:    sessionToken,
-			Expires:  expiresAt,
-			HttpOnly: true,
-			Path:     "/",
-		})
-
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-	} else {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	if err != nil {
+		log.Printf("Error creating user: %v", err)
+		http.Error(w, "Error creating user", http.StatusInternalServerError)
+		return
 	}
+
+	// Перенаправляем на страницу входа
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {

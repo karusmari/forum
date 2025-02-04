@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -198,4 +199,168 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Template error: %v", err)
 		http.Error(w, "Error rendering page", http.StatusInternalServerError)
 	}
+}
+
+// Обновляем существующий метод GetPost в handlers.go:
+func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
+	postID := r.URL.Path[len("/post/"):]
+	log.Printf("Getting post with ID: %s", postID)
+
+	// Получаем пользователя из сессии
+	user := h.GetSessionUser(r)
+
+	// Получаем пост
+	post, err := h.getPostByID(postID)
+	if err != nil {
+		log.Printf("Error getting post: %v", err)
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Проверяем реакции пользователя на пост
+	if user != nil {
+		post.UserLiked = h.hasUserReaction(user.ID, post.ID, "like")
+		post.UserDisliked = h.hasUserReaction(user.ID, post.ID, "dislike")
+	}
+
+	// Получаем комментарии
+	comments, err := h.getComments(post.ID)
+	if err != nil {
+		log.Printf("Error getting comments: %v", err)
+		http.Error(w, "Error loading comments", http.StatusInternalServerError)
+		return
+	}
+	log.Printf("Found %d comments for post %d", len(comments), post.ID)
+
+	// Проверяем реакции пользователя на комментарии
+	if user != nil {
+		for _, comment := range comments {
+			comment.UserLiked = h.hasCommentReaction(user.ID, comment.ID, "like")
+			comment.UserDisliked = h.hasCommentReaction(user.ID, comment.ID, "dislike")
+		}
+	}
+
+	// Подготавливаем данные для комментариев
+	var commentDataList []CommentData
+	for _, comment := range comments {
+		commentData := CommentData{
+			Comment: comment,
+			User:    user,
+			Post:    post,
+		}
+		commentDataList = append(commentDataList, commentData)
+	}
+
+	data := TemplateData{
+		Title:           post.Title,
+		Post:            post,
+		User:            user,
+		Comments:        comments,
+		CommentDataList: commentDataList,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "post.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Error rendering page", http.StatusInternalServerError)
+	}
+}
+
+// Добавляем метод getPostByID
+func (h *Handler) getPostByID(postID string) (*Post, error) {
+	var post Post
+	err := h.db.QueryRow(`
+		SELECT p.id, p.user_id, p.title, p.content, p.created_at,
+			   u.username,
+			   COUNT(DISTINCT CASE WHEN r.type = 'like' THEN r.id END) as likes,
+			   COUNT(DISTINCT CASE WHEN r.type = 'dislike' THEN r.id END) as dislikes
+		FROM posts p
+		JOIN users u ON p.user_id = u.id
+		LEFT JOIN reactions r ON p.id = r.post_id
+		WHERE p.id = ?
+		GROUP BY p.id, p.user_id, p.title, p.content, p.created_at, u.username
+	`, postID).Scan(
+		&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt,
+		&post.Username, &post.Likes, &post.Dislikes,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("post not found: %s", postID)
+		}
+		return nil, err
+	}
+
+	// Получаем категории поста
+	post.Categories, err = h.getPostCategories(post.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Получаем количество комментариев
+	var commentCount int
+	err = h.db.QueryRow(`
+		SELECT COUNT(*) 
+		FROM comments 
+		WHERE post_id = ?
+	`, post.ID).Scan(&commentCount)
+	if err != nil {
+		return nil, err
+	}
+	post.CommentCount = commentCount
+
+	return &post, nil
+}
+
+// Добавляем метод getComments
+func (h *Handler) getComments(postID int64) ([]*Comment, error) {
+	rows, err := h.db.Query(`
+		SELECT c.id, c.user_id, c.content, c.created_at, c.username,
+			   COUNT(CASE WHEN r.type = 'like' THEN 1 END) as likes,
+			   COUNT(CASE WHEN r.type = 'dislike' THEN 1 END) as dislikes
+		FROM comments c
+		LEFT JOIN reactions r ON c.id = r.comment_id
+		WHERE c.post_id = ?
+		GROUP BY c.id, c.user_id, c.content, c.created_at, c.username
+		ORDER BY c.created_at DESC
+	`, postID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments []*Comment
+	for rows.Next() {
+		var c Comment
+		err := rows.Scan(
+			&c.ID, &c.UserID, &c.Content, &c.CreatedAt, &c.Username,
+			&c.Likes, &c.Dislikes,
+		)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, &c)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return comments, nil
+}
+
+// Добавляем новый метод для проверки реакций на комментарии
+func (h *Handler) hasCommentReaction(userID int64, commentID int64, reactionType string) bool {
+	var exists bool
+	err := h.db.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM reactions 
+			WHERE user_id = ? AND comment_id = ? AND type = ?
+		)
+	`, userID, commentID, reactionType).Scan(&exists)
+
+	if err != nil {
+		return false
+	}
+	return exists
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
@@ -13,6 +14,13 @@ import (
 type Handler struct {
 	db        *sql.DB
 	templates *template.Template
+}
+
+// Добавляем структуру для ответа API
+type CommentReactionResponse struct {
+	Success bool `json:"success"`
+	Likes    int  `json:"likes"`
+	Dislikes int  `json:"dislikes"`
 }
 
 func NewHandler(db *sql.DB) *Handler {
@@ -313,108 +321,6 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/post/"+strconv.FormatInt(postID, 10), http.StatusSeeOther)
 }
 
-func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
-	// Получаем ID поста из URL
-	postID := strings.TrimPrefix(r.URL.Path, "/post/")
-	if postID == "" {
-		log.Printf("Empty post ID")
-		http.Error(w, "Invalid post ID", http.StatusBadRequest)
-		return
-	}
-	log.Printf("Getting post with ID: %s", postID)
-
-	var post Post
-	err := h.db.QueryRow(`
-		SELECT p.id, p.user_id, p.title, p.content, p.created_at,
-			   u.username,
-			   COUNT(DISTINCT CASE WHEN r.type = 'like' THEN r.id END) as likes,
-			   COUNT(DISTINCT CASE WHEN r.type = 'dislike' THEN r.id END) as dislikes
-		FROM posts p
-		JOIN users u ON p.user_id = u.id
-		LEFT JOIN reactions r ON p.id = r.post_id
-		WHERE p.id = ?
-		GROUP BY p.id, p.user_id, p.title, p.content, p.created_at, u.username
-	`, postID).Scan(
-		&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt,
-		&post.Username, &post.Likes, &post.Dislikes,
-	)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Printf("Post not found: %s", postID)
-			http.Error(w, "Post not found", http.StatusNotFound)
-		} else {
-			log.Printf("Database error: %v", err)
-			http.Error(w, "Database error", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Получаем категории поста
-	post.Categories, err = h.getPostCategories(post.ID)
-	if err != nil {
-		log.Printf("Error getting categories: %v", err)
-		http.Error(w, "Error loading categories", http.StatusInternalServerError)
-		return
-	}
-
-	// Получаем комментарии к посту
-	log.Printf("Getting comments for post %s", postID)
-	var comments []Comment
-	rows, err := h.db.Query(`
-		SELECT c.id, c.user_id, c.content, c.created_at, c.username,
-			   COUNT(CASE WHEN r.type = 'like' THEN 1 END) as likes,
-			   COUNT(CASE WHEN r.type = 'dislike' THEN 1 END) as dislikes
-		FROM comments c
-		LEFT JOIN reactions r ON c.id = r.comment_id
-		WHERE c.post_id = ?
-		GROUP BY c.id, c.user_id, c.content, c.created_at, c.username
-		ORDER BY c.created_at DESC
-	`, postID)
-
-	if err != nil {
-		log.Printf("Error getting comments: %v", err)
-	} else {
-		defer rows.Close()
-		for rows.Next() {
-			var c Comment
-			err := rows.Scan(&c.ID, &c.UserID, &c.Content, &c.CreatedAt, &c.Username, &c.Likes, &c.Dislikes)
-			if err != nil {
-				log.Printf("Error scanning comment: %v", err)
-				continue
-			}
-			comments = append(comments, c)
-		}
-		log.Printf("Found %d comments for post %s", len(comments), postID)
-	}
-
-	// Проверяем, существует ли пост
-	var exists bool
-	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM posts WHERE id = ?)", postID).Scan(&exists)
-	if err != nil {
-		log.Printf("Error checking post existence: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	if !exists {
-		log.Printf("Post %s does not exist", postID)
-		http.Error(w, "Post not found", http.StatusNotFound)
-		return
-	}
-
-	data := &TemplateData{
-		Title:    post.Title,
-		User:     h.GetSessionUser(r),
-		Post:     &post,
-		Comments: comments,
-	}
-
-	if err := h.templates.ExecuteTemplate(w, "post.html", data); err != nil {
-		log.Printf("Template error: %v", err)
-		http.Error(w, "Error rendering page", http.StatusInternalServerError)
-	}
-}
-
 func (h *Handler) hasUserReaction(userID int64, postID int64, reactionType string) bool {
 	var exists bool
 	err := h.db.QueryRow(`
@@ -555,4 +461,87 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
+}
+
+// Добавляем обработчик реакций на комментарии
+func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user := h.GetSessionUser(r)
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var data struct {
+		CommentID int64  `json:"comment_id"`
+		Type      string `json:"type"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Начинаем транзакцию
+	tx, err := h.db.Begin()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	// Удаляем существующую реакцию пользователя
+	_, err = tx.Exec(`
+		DELETE FROM reactions 
+		WHERE user_id = ? AND comment_id = ?`,
+		user.ID, data.CommentID,
+	)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Добавляем новую реакцию
+	_, err = tx.Exec(`
+		INSERT INTO reactions (user_id, comment_id, type)
+		VALUES (?, ?, ?)`,
+		user.ID, data.CommentID, data.Type,
+	)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Обновляем счетчики в комментарии
+	var likes, dislikes int
+	err = tx.QueryRow(`
+		SELECT 
+			COUNT(CASE WHEN type = 'like' THEN 1 END) as likes,
+			COUNT(CASE WHEN type = 'dislike' THEN 1 END) as dislikes
+		FROM reactions
+		WHERE comment_id = ?`,
+		data.CommentID,
+	).Scan(&likes, &dislikes)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	response := CommentReactionResponse{
+		Success:  true,
+		Likes:    likes,
+		Dislikes: dislikes,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

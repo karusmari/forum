@@ -30,7 +30,7 @@
         <article class="post-preview">
             {{ if .Categories }}
                 <div class="post-categories">
-                    {{ range $index, $category := .Categories }}{{ if $index }}, {{ end }}{{ $category }}{{ end }}
+                    Categories: {{ range $index, $category := .Categories }}{{ if $index }}, {{ end }}{{ $category }}{{ end }}
                 </div>
             {{ end }}
             <h2><a href="/post/{{ .ID }}">{{ .Title }}</a></h2>

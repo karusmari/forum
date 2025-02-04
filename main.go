@@ -221,7 +221,7 @@ func main() {
 	http.HandleFunc("/api/comment/delete", h.DeleteComment)
 	http.HandleFunc("/api/post/delete", h.DeletePost)
 	http.HandleFunc("/post/edit/", h.EditPost)
-	http.HandleFunc("/api/comment/react", h.ReactToComment)
+	http.HandleFunc("/api/comment/react", h.HandleCommentReaction)
 	http.HandleFunc("/api/comment/edit", h.EditComment)
 
 	// Serve static files
