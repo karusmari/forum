@@ -69,10 +69,9 @@ CREATE TABLE IF NOT EXISTS reactions (
     type TEXT NOT NULL CHECK (type IN ('like', 'dislike')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-    FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
-    UNIQUE(user_id, post_id),
-    UNIQUE(user_id, comment_id)
+    FOREIGN KEY (post_id) REFERENCES posts(id),
+    FOREIGN KEY (comment_id) REFERENCES comments(id),
+    UNIQUE(user_id, post_id, comment_id)
 );
 
 -- Создаем таблицу сессий

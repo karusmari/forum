@@ -1,120 +1,68 @@
 {{define "post.html"}}
     {{template "header" .}}
-    <div class="post-container">
-        <article class="post-full">
-            <h1>{{.Post.Title}}</h1>
-            <div class="post-meta">
-                <time>{{ .Post.CreatedAt }}</time>
-                <span class="author">By {{ .Post.Username }}</span>
+    <div class="post-page">
+        {{ with .Post }}
+            <article class="post">
+                {{ if .Categories }}
+                    <div class="post-categories">
+                        Categories: {{ range $index, $category := .Categories }}{{ if $index }}, {{ end }}{{ $category }}{{ end }}
+                    </div>
+                {{ end }}
+                <h1>{{ .Title }}</h1>
+                <div class="post-meta">
+                    <time>{{ .CreatedAt }}</time>
+                    <span class="author">By {{ .Username }}</span>
+                </div>
                 
-                {{ if .Post.Categories }}
-                    <span class="post-categories">
-                        {{ range $index, $category := .Post.Categories }}
-                            {{ if $index }}, {{ end }}
-                            <a href="/categories#{{ $category | urlquery }}">{{ $category }}</a>
-                        {{ end }}
-                    </span>
+                <div class="post-content">
+                    {{ .Content }}
+                </div>
+
+                <div class="reactions">
+                    {{ if $.User }}
+                        <button class="like-btn {{ if .UserLiked }}active{{ end }}" 
+                                data-post-id="{{ .ID }}" 
+                                data-type="like">
+                            👍 {{ .Likes }}
+                        </button>
+                        <button class="dislike-btn {{ if .UserDisliked }}active{{ end }}" 
+                                data-post-id="{{ .ID }}" 
+                                data-type="dislike">
+                            👎 {{ .Dislikes }}
+                        </button>
+                    {{ else }}
+                        <span class="reaction-count">👍 {{ .Likes }}</span>
+                        <span class="reaction-count">👎 {{ .Dislikes }}</span>
+                    {{ end }}
+                </div>
+
+                {{ if and $.User (eq $.User.ID .UserID) }}
+                    <div class="post-actions">
+                        <a href="/post/edit/{{ .ID }}" class="edit-btn">✏️ Edit</a>
+                        <button class="delete-btn" data-post-id="{{ .ID }}">🗑️ Delete</button>
+                    </div>
+                {{ end }}
+            </article>
+
+            <div class="comments-section" id="comments">
+                <h2>Comments</h2>
+                {{ if $.User }}
+                    <form class="comment-form" action="/api/comment" method="POST">
+                        <input type="hidden" name="post_id" value="{{ .ID }}">
+                        <textarea name="content" placeholder="Write your comment here"></textarea>
+                        <button type="submit">Submit</button>
+                    </form>
+                {{ else }}
+                    <p>Please <a href="/login">login</a> to leave comments.</p>
                 {{ end }}
 
-                {{if or (eq .Post.UserID $.User.ID) $.User.IsAdmin}}
-                    <div class="post-actions">
-                        <a href="/post/edit/{{.Post.ID}}" class="edit-btn">✏️ Edit</a>
-                        <form method="POST" action="/api/post/delete" style="display: inline;">
-                            <input type="hidden" name="post_id" value="{{.Post.ID}}">
-                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this post? This action cannot be undone.')">
-                                🗑️ Delete
-                            </button>
-                        </form>
-                    </div>
-                {{end}}
+                <div class="comments-list">
+                    {{ range $.CommentDataList }}
+                        {{template "comment" .}}
+                    {{ end }}
+                </div>
             </div>
-            <div class="post-content">
-                {{.Post.Content}}
-            </div>
-            <div class="reactions">
-                <button class="like-btn {{if .Post.UserLiked}}active{{end}}" 
-                        data-post-id="{{.Post.ID}}" 
-                        data-type="like">
-                    👍 {{.Post.Likes}}
-                </button>
-                <button class="dislike-btn {{if .Post.UserDisliked}}active{{end}}" 
-                        data-post-id="{{.Post.ID}}" 
-                        data-type="dislike">
-                    👎 {{.Post.Dislikes}}
-                </button>
-            </div>
-        </article>
-
-        {{if .User}}
-            <div class="comment-form">
-                <h3>Add Comment</h3>
-                <form method="POST" action="/api/comment">
-                    <input type="hidden" name="post_id" value="{{.Post.ID}}">
-                    <textarea name="content" required placeholder="Write your comment here"></textarea>
-                    <button type="submit">Submit</button>
-                </form>
-            </div>
-        {{else}}
-            <div class="login-prompt">
-                <p>Please <a href="/login">log in</a> to add comments.</p>
-            </div>
-        {{end}}
-
-        <div class="comments">
-            <h3>Comments</h3>
-            {{if .Comments}}
-                {{range .Comments}}
-                    <div class="comment">
-                        <div class="comment-meta">
-                            <span>{{.Username}}</span>
-                            <span>{{.CreatedAt.Format "02 Jan 2006 15:04"}}</span>
-                            {{if or (eq .UserID $.User.ID) $.User.IsAdmin}}
-                                <div class="comment-actions">
-                                    <button onclick="toggleEditComment({{.ID}})" class="edit-btn">
-                                        ✏️ Edit
-                                    </button>
-                                    <form method="POST" action="/api/comment/delete" style="display: inline;">
-                                        <input type="hidden" name="comment_id" value="{{.ID}}">
-                                        <input type="hidden" name="post_id" value="{{$.Post.ID}}">
-                                        <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this comment?')">
-                                            🗑️ Delete
-                                        </button>
-                                    </form>
-                                </div>
-                            {{end}}
-                        </div>
-                        <div class="comment-content" id="comment-content-{{.ID}}">
-                            {{.Content}}
-                        </div>
-                        {{if or (eq .UserID $.User.ID) $.User.IsAdmin}}
-                            <div class="edit-form" id="edit-form-{{.ID}}" style="display: none;">
-                                <form method="POST" action="/api/comment/edit">
-                                    <input type="hidden" name="comment_id" value="{{.ID}}">
-                                    <input type="hidden" name="post_id" value="{{$.Post.ID}}">
-                                    <textarea name="content" required>{{.Content}}</textarea>
-                                    <div class="button-group">
-                                        <button type="submit">Save</button>
-                                        <button type="button" onclick="toggleEditComment({{.ID}})">Cancel</button>
-                                    </div>
-                                </form>
-                            </div>
-                        {{end}}
-                        <div class="reactions" id="comment-{{.ID}}">
-                            <button onclick="reactToComment({{.ID}}, 'like')" 
-                                    class="comment-like-btn {{if .UserLiked}}active{{end}}">
-                                👍 <span class="likes-count">{{.Likes}}</span>
-                            </button>
-                            <button onclick="reactToComment({{.ID}}, 'dislike')" 
-                                    class="comment-dislike-btn {{if .UserDisliked}}active{{end}}">
-                                👎 <span class="dislikes-count">{{.Dislikes}}</span>
-                            </button>
-                        </div>
-                    </div>
-                {{end}}
-            {{else}}
-                <p>No comments yet.</p>
-            {{end}}
-        </div>
+        {{ end }}
     </div>
     <script src="/static/js/reactions.js"></script>
     <script src="/static/js/comments.js"></script>
