@@ -16,6 +16,12 @@ body {
     background-attachment: fixed;
 }
 
+a img {
+    width: 200px; 
+    height: auto; 
+    margin: 1px; 
+}
+
 /* a {
     color: var(--secondary-color);
     text-decoration: none;
@@ -190,3 +196,4 @@ a:hover {
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 1.5rem;
+}

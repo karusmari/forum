@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ .Title }} - LIFE IN ÅLAND</title>
+    <link rel="icon" type="static" href="/static/flag.jpeg">
     <!-- Сначала общие стили -->
     <link rel="stylesheet" href="/static/css/style.css">
     <!-- Затем специфичные стили для логина -->
@@ -15,13 +16,13 @@
 <body>
     <header>
         <nav>
-            <div class="logo">
+            <!-- <div class="logo">
                 <a href="/">
                     <img src="static/2.png" alt="life in åland logo" />
                 </a>
-            </div>
+            </div> -->
             <div class="nav-links">
-                <!-- <a href="/">Home</a> -->
+                <a href="/">Home</a>
                 <!-- <a href="/categories">Categories</a> -->
                 <a href="/rules">Rules</a>
                 {{ if .User }}

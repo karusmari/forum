@@ -1,3 +1,22 @@
+header {
+    background-image: url("/static/life.webp"); 
+    background-size: cover;  
+    background-position: top left; 
+    background-repeat: no-repeat;
+    /* background-size: initial; */
+    height: 30vh; 
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* position: relative; */
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+
+
 * {
     margin: 0;
     padding: 0;
@@ -24,9 +43,10 @@ a:hover {
 nav {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: right;
     max-width: 1200px;
     margin: 0 auto;
+    vertical-align: bottom;
 }
 
 .nav-links a {
@@ -34,10 +54,13 @@ nav {
     text-decoration: none;
     padding: 0.5rem 1rem;
     transition: color 0.3s ease;
+    position: right bo;
+    text-decoration: double;
+    vertical-align: bottom;
 }
 
 .nav-links a:hover {
-    color: #ddd;
+    color: rgb(186, 201, 206);
 }
 
 /* Content Container */
