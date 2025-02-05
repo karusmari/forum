@@ -83,25 +83,37 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Found category: %s", category.Name)
 
-	// Обновляем запрос для категорий
+	// Получаем текущего пользователя
+	user := h.GetSessionUser(r)
+
+	// Обновляем запрос для получения постов с информацией о лайках
 	query := `
 		SELECT p.id, p.title, p.content, p.username, p.created_at, p.user_id,
-			   p.likes, p.dislikes, c.name as category_name,
-			   COUNT(DISTINCT cm.id) as comment_count
+			   COUNT(DISTINCT cm.id) as comment_count,
+			   EXISTS(
+				   SELECT 1 FROM reactions r 
+				   WHERE r.post_id = p.id 
+				   AND r.user_id = ? 
+				   AND r.type = 'like'
+			   ) as user_liked
 		FROM posts p
 		INNER JOIN post_categories pc ON p.id = pc.post_id
-		INNER JOIN categories c ON pc.category_id = c.id
 		LEFT JOIN comments cm ON p.id = cm.post_id
-		WHERE c.id = ?
-		GROUP BY p.id, p.title, p.content, p.username, p.created_at, p.user_id,
-				 p.likes, p.dislikes, c.name
+		WHERE pc.category_id = ?
+		GROUP BY p.id
 		ORDER BY p.created_at DESC
 	`
 
-	rows, err := h.db.Query(query, categoryID)
+	// Выполняем запрос с ID пользователя
+	var userID int64
+	if user != nil {
+		userID = user.ID
+	}
+
+	rows, err := h.db.Query(query, userID, categoryID)
 	if err != nil {
 		log.Printf("Error getting posts: %v", err)
-		http.Error(w, "Error loading posts", http.StatusInternalServerError)
+		http.Error(w, "Error getting posts", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -109,29 +121,25 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	var posts []Post
 	for rows.Next() {
 		var p Post
-		var categoryName string
 		err := rows.Scan(
 			&p.ID, &p.Title, &p.Content, &p.Username, &p.CreatedAt, &p.UserID,
-			&p.Likes, &p.Dislikes, &categoryName, &p.CommentCount,
+			&p.CommentCount, &p.UserLiked,
 		)
 		if err != nil {
 			log.Printf("Error scanning post: %v", err)
 			continue
 		}
-		p.Categories = []string{categoryName}
 		posts = append(posts, p)
 	}
-	log.Printf("Found %d posts in category", len(posts))
 
 	data := TemplateData{
-		Posts:    posts,
+		Title:    category.Name,
+		User:     user,
 		Category: &category,
+		Posts:    posts,
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "category.html", data); err != nil {
-		log.Printf("Template error: %v", err)
-		http.Error(w, "Error rendering page", http.StatusInternalServerError)
-	}
+	h.templates.ExecuteTemplate(w, "category.html", data)
 }
 
 func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {

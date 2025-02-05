@@ -12,13 +12,6 @@ type Handler struct {
 	templates *template.Template
 }
 
-// Добавляем структуру для ответа API
-type CommentReactionResponse struct {
-	Success  bool `json:"success"`
-	Likes    int  `json:"likes"`
-	Dislikes int  `json:"dislikes"`
-}
-
 // this will create a new handler which contains the database and the templates
 func NewHandler(db *sql.DB) *Handler {
 	//creating a new template with the timezone function

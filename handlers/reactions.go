@@ -1,13 +1,22 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
 type ReactionRequest struct {
-	PostID int64  `json:"post_id"`
-	Type   string `json:"type"`
+	PostID    int64  `json:"post_id"`
+	CommentID int64  `json:"comment_id"`
+	Type      string `json:"type"`
+}
+
+type ReactionResponse struct {
+	Success  bool `json:"success"`
+	Likes    int  `json:"likes"`
+	Dislikes int  `json:"dislikes"`
 }
 
 func (h *Handler) HandleReaction(w http.ResponseWriter, r *http.Request) {
@@ -28,24 +37,84 @@ func (h *Handler) HandleReaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate reaction type
-	if req.Type != "like" && req.Type != "dislike" {
-		http.Error(w, "Invalid reaction type", http.StatusBadRequest)
+	// Начинаем транзакцию
+	tx, err := h.db.Begin()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
+	defer tx.Rollback()
 
-	_, err := h.db.Exec(`
-		INSERT INTO reactions (user_id, post_id, type)
-		VALUES (?, ?, ?)
-		ON CONFLICT(user_id, post_id) DO UPDATE SET type = ?
-	`, user.ID, req.PostID, req.Type, req.Type)
+	// Проверяем существующую реакцию
+	var existingType string
+	err = tx.QueryRow(`
+		SELECT type FROM reactions 
+		WHERE user_id = ? AND post_id = ?`,
+		user.ID, req.PostID,
+	).Scan(&existingType)
+
+	if err == sql.ErrNoRows {
+		// Если реакции нет, добавляем новую
+		_, err = tx.Exec(`
+			INSERT INTO reactions (user_id, post_id, type)
+			VALUES (?, ?, ?)`,
+			user.ID, req.PostID, req.Type,
+		)
+	} else if err == nil {
+		if existingType == req.Type {
+			// Если такая же реакция уже есть, удаляем её
+			_, err = tx.Exec(`
+				DELETE FROM reactions 
+				WHERE user_id = ? AND post_id = ?`,
+				user.ID, req.PostID,
+			)
+		} else {
+			// Если есть другая реакция, обновляем тип
+			_, err = tx.Exec(`
+				UPDATE reactions 
+				SET type = ? 
+				WHERE user_id = ? AND post_id = ?`,
+				req.Type, user.ID, req.PostID,
+			)
+		}
+	}
 
 	if err != nil {
-		http.Error(w, "Error saving reaction", http.StatusInternalServerError)
+		log.Printf("Error handling reaction: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	// Получаем обновленные счетчики
+	var likes, dislikes int
+	err = tx.QueryRow(`
+		SELECT 
+			COUNT(CASE WHEN type = 'like' THEN 1 END) as likes,
+			COUNT(CASE WHEN type = 'dislike' THEN 1 END) as dislikes
+		FROM reactions 
+		WHERE post_id = ?`,
+		req.PostID,
+	).Scan(&likes, &dislikes)
+
+	if err != nil {
+		log.Printf("Error getting reaction counts: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Printf("Error committing transaction: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Отправляем ответ
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ReactionResponse{
+		Success:  true,
+		Likes:    likes,
+		Dislikes: dislikes,
+	})
 }
 
 func (h *Handler) hasUserReaction(userID int64, postID int64, reactionType string) bool {
@@ -76,72 +145,88 @@ func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var data struct {
-		CommentID int64  `json:"comment_id"`
-		Type      string `json:"type"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+	var req ReactionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Error decoding request: %v", err)
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	// Начинаем транзакцию
 	tx, err := h.db.Begin()
 	if err != nil {
+		log.Printf("Error starting transaction: %v", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
 
-	// Удаляем существующую реакцию пользователя
-	_, err = tx.Exec(`
-		DELETE FROM reactions 
+	// Проверяем существующую реакцию
+	var existingType string
+	err = tx.QueryRow(`
+		SELECT type FROM reactions 
 		WHERE user_id = ? AND comment_id = ?`,
-		user.ID, data.CommentID,
-	)
+		user.ID, req.CommentID,
+	).Scan(&existingType)
+
+	if err == sql.ErrNoRows {
+		// Если реакции нет, добавляем новую
+		_, err = tx.Exec(`
+			INSERT INTO reactions (user_id, comment_id, type)
+			VALUES (?, ?, ?)`,
+			user.ID, req.CommentID, req.Type,
+		)
+	} else if err == nil {
+		if existingType == req.Type {
+			// Если такая же реакция уже есть, удаляем её
+			_, err = tx.Exec(`
+				DELETE FROM reactions 
+				WHERE user_id = ? AND comment_id = ?`,
+				user.ID, req.CommentID,
+			)
+		} else {
+			// Если есть другая реакция, обновляем тип
+			_, err = tx.Exec(`
+				UPDATE reactions 
+				SET type = ? 
+				WHERE user_id = ? AND comment_id = ?`,
+				req.Type, user.ID, req.CommentID,
+			)
+		}
+	}
+
 	if err != nil {
+		log.Printf("Error handling reaction: %v", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	// Добавляем новую реакцию
-	_, err = tx.Exec(`
-		INSERT INTO reactions (user_id, comment_id, type)
-		VALUES (?, ?, ?)`,
-		user.ID, data.CommentID, data.Type,
-	)
-	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-
-	// Обновляем счетчики в комментарии
+	// Получаем обновленные счетчики
 	var likes, dislikes int
 	err = tx.QueryRow(`
 		SELECT 
 			COUNT(CASE WHEN type = 'like' THEN 1 END) as likes,
 			COUNT(CASE WHEN type = 'dislike' THEN 1 END) as dislikes
-		FROM reactions
+		FROM reactions 
 		WHERE comment_id = ?`,
-		data.CommentID,
+		req.CommentID,
 	).Scan(&likes, &dislikes)
+
 	if err != nil {
+		log.Printf("Error getting reaction counts: %v", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
+		log.Printf("Error committing transaction: %v", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	response := CommentReactionResponse{
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ReactionResponse{
 		Success:  true,
 		Likes:    likes,
 		Dislikes: dislikes,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	})
 }

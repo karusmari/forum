@@ -5,7 +5,7 @@ header {
     background-repeat: no-repeat;
     /* background-size: initial; */
     height: 30vh; 
-    width: 120%;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -134,33 +134,42 @@ nav {
 }
 
 .reactions {
-    margin-top: 1rem;
+    margin: 10px 0;
+    display: flex;
+    gap: 10px;
 }
 
 .reactions button {
-    background: none;
+    padding: 5px 10px;
     border: 1px solid #ddd;
-    padding: 0.5rem 1rem;
-    margin-right: 0.5rem;
+    border-radius: 4px;
+    background: white;
     cursor: pointer;
-    border-radius: 3px;
     transition: all 0.2s ease;
 }
 
 .reactions button:hover {
-    background-color: #f5f5f5;
+    background: #f0f0f0;
 }
 
 .reactions button.active {
-    background-color: #e3f2fd;
+    background: #2196f3;
+    color: white;
     border-color: #2196f3;
+}
+
+.reaction-count {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f5f5f5;
 }
 
 footer {
     background-color: #333;
     color: white;
-    padding: 0;
-    margin-top: 0;
+    padding: 2rem 0;
+    margin-top: 3rem;
 }
 
 .footer-content {
@@ -401,61 +410,6 @@ footer {
     border-color: #999;
 }
 
-<<<<<<< HEAD
-.post-categories {
-    color: #666;
-    margin-bottom: 8px;
-}
-
-.comment {
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
-
-.comment-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 0.5rem;
-    color: #666;
-}
-
-.comment-content {
-    margin: 0.5rem 0;
-}
-
-.comment .reactions {
-    margin-top: 10px;
-}
-
-.comment .reactions button {
-    margin-right: 5px;
-}
-
-.reaction-count {
-    display: inline-block;
-    padding: 5px 10px;
-    color: #666;
-}
-
-.like-btn, .dislike-btn {
-    padding: 5px 10px;
-    border: 1px solid #ddd;
-    background: none;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.like-btn.active, .dislike-btn.active {
-    background-color: #f0f0f0;
-    border-color: #999;
-}
-
-=======
->>>>>>> Katerina
 .edit-form {
     margin-top: 0.5rem;
 }
@@ -469,7 +423,6 @@ footer {
 .button-group {
     display: flex;
     gap: 0.5rem;
-<<<<<<< HEAD
 }
 
 .error-message {
@@ -560,7 +513,4 @@ footer {
     box-shadow: 0 2px 4px rgba(255, 0, 0, 0.1);
     font-size: 16px;
     line-height: 1.4;
-} 
-=======
 }
->>>>>>> Katerina

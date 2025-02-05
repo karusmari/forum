@@ -4,30 +4,98 @@
         <div class="category-header">
             <h1>{{ .Category.Name }}</h1>
             <p>{{ .Category.Description }}</p>
+            
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterPosts('all')">All Posts</button>
+                {{ if .User }}
+                    <button class="filter-btn" onclick="filterPosts('my')">My Posts</button>
+                    <button class="filter-btn" onclick="filterPosts('liked')">Liked Posts</button>
+                {{ end }}
+            </div>
         </div>
 
-        <div class="posts">
-            {{ if .Posts }}
-                {{ range .Posts }}
-                    <article class="post-preview">
-                        <h2><a href="/post/{{ .ID }}">{{ .Title }}</a></h2>
-                        <div class="post-meta">
-                            <time>{{ .CreatedAt }}</time>
-                            <span class="author">By {{ .Username }}</span>
-                            
-                            <span class="comment-count">
-                                <a href="/post/{{ .ID }}#comments">
-                                    💬 {{ .CommentCount }} {{ if eq .CommentCount 1 }}comment{{ else }}comments{{ end }}
-                                </a>
-                            </span>
-                        </div>
-                    </article>
-                {{ end }}
+        <div class="posts" id="postsContainer">
+            {{ range .Posts }}
+                <article class="post-preview" 
+                         data-user-id="{{ .UserID }}"
+                         data-is-liked="{{ .UserLiked }}">
+                    <h2><a href="/post/{{ .ID }}">{{ .Title }}</a></h2>
+                    <div class="post-meta">
+                        <time>{{ .CreatedAt.Format "02 Jan 2006 15:04" }}</time>
+                        <span class="author">By {{ .Username }}</span>
+                        <span class="comment-count">
+                            <a href="/post/{{ .ID }}#comments">
+                                💬 {{ .CommentCount }} {{ if eq .CommentCount 1 }}comment{{ else }}comments{{ end }}
+                            </a>
+                        </span>
+                    </div>
+                </article>
             {{ else }}
                 <p class="no-posts">No posts in this category yet.</p>
             {{ end }}
         </div>
     </div>
-    <script src="/static/js/reactions.js"></script>
+
+    <script>
+    function filterPosts(filter) {
+        const posts = document.querySelectorAll('.post-preview');
+        const currentUserId = '{{ with .User }}{{ .ID }}{{ else }}0{{ end }}';
+        
+        posts.forEach(post => {
+            let show = false;
+            switch(filter) {
+                case 'my':
+                    show = post.dataset.userId === currentUserId;
+                    break;
+                case 'liked':
+                    show = post.dataset.isLiked === "true";
+                    break;
+                default: // 'all'
+                    show = true;
+                    break;
+            }
+            
+            post.style.display = show ? 'block' : 'none';
+            if (show) {
+                post.style.opacity = '1';
+            } else {
+                post.style.opacity = '0';
+            }
+        });
+
+        // Обновляем активную кнопку
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+    </script>
+
+    <style>
+    .filters {
+        margin: 20px 0;
+    }
+    .filter-btn {
+        padding: 8px 16px;
+        margin-right: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .filter-btn:hover {
+        background: #e3f2fd;
+    }
+    .filter-btn.active {
+        background: #2196f3;
+        color: white;
+        border-color: #2196f3;
+    }
+    .post-preview {
+        transition: opacity 0.3s ease;
+    }
+    </style>
+
     {{template "footer" .}}
 {{end}} 

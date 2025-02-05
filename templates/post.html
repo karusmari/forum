@@ -10,7 +10,7 @@
                 {{ end }}
                 <h1>{{ .Title }}</h1>
                 <div class="post-meta">
-                    <time>{{ .CreatedAt }}</time>
+                    <time>{{ .CreatedAt.Format "02 Jan 2006 15:04" }}</time>
                     <span class="author">By {{ .Username }}</span>
                 </div>
                 
@@ -23,12 +23,12 @@
                         <button class="like-btn {{ if .UserLiked }}active{{ end }}" 
                                 data-post-id="{{ .ID }}" 
                                 data-type="like">
-                            👍 {{ .Likes }}
+                            👍 <span class="likes-count">{{ .Likes }}</span>
                         </button>
                         <button class="dislike-btn {{ if .UserDisliked }}active{{ end }}" 
                                 data-post-id="{{ .ID }}" 
                                 data-type="dislike">
-                            👎 {{ .Dislikes }}
+                            👎 <span class="dislikes-count">{{ .Dislikes }}</span>
                         </button>
                     {{ else }}
                         <span class="reaction-count">👍 {{ .Likes }}</span>
@@ -39,7 +39,9 @@
                 {{ if and $.User (eq $.User.ID .UserID) }}
                     <div class="post-actions">
                         <a href="/post/edit/{{ .ID }}" class="edit-btn">✏️ Edit</a>
-                        <button class="delete-btn" data-post-id="{{ .ID }}">🗑️ Delete</button>
+                        <form method="POST" action="/post/delete/{{ .ID }}" style="display: inline;">
+                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure?')">🗑️ Delete</button>
+                        </form>
                     </div>
                 {{ end }}
             </article>
@@ -47,9 +49,9 @@
             <div class="comments-section" id="comments">
                 <h2>Comments</h2>
                 {{ if $.User }}
-                    <form class="comment-form" action="/api/comment" method="POST">
+                    <form class="comment-form" action="/api/comment" method="POST" onsubmit="return validateComment(this);">
                         <input type="hidden" name="post_id" value="{{ .ID }}">
-                        <textarea name="content" placeholder="Write your comment here"></textarea>
+                        <textarea name="content" placeholder="Write your comment here" required minlength="1"></textarea>
                         <button type="submit">Submit</button>
                     </form>
                 {{ else }}
@@ -64,6 +66,16 @@
             </div>
         {{ end }}
     </div>
+    <script>
+    function validateComment(form) {
+        const content = form.querySelector('textarea[name="content"]').value.trim();
+        if (content === '') {
+            alert('Comment cannot be empty');
+            return false;
+        }
+        return true;
+    }
+    </script>
     <script src="/static/js/reactions.js"></script>
     <script src="/static/js/comments.js"></script>
     {{template "footer" .}}

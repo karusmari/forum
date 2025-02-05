@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -20,41 +21,38 @@ func init() {
 }
 
 func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
-	//checking if the method is POST
+	// Проверяем метод
 	if r.Method != http.MethodPost {
 		log.Printf("Invalid method: %s", r.Method)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	//checking if the user is authenticated
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
-		log.Printf("No session cookie: %v", err)
-		http.Error(w, "Unauthorized - No session cookie", http.StatusUnauthorized)
-		return
-	}
-	log.Printf("Found session cookie: %s", cookie.Value)
-
-	//getting the user from the session
+	// Проверяем аутентификацию
 	user := h.GetSessionUser(r)
 	if user == nil {
-		log.Printf("User not authenticated (no user found for session)")
-		http.Error(w, "Unauthorized - Invalid session", http.StatusUnauthorized)
+		log.Printf("User not authenticated")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	log.Printf("User authenticated: %s (ID: %d)", user.Username, user.ID)
 
-	//parsing the data from the form
+	// Парсим форму
 	if err := r.ParseForm(); err != nil {
 		log.Printf("Form parse error: %v", err)
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
+	// Получаем и проверяем данные
 	postID := r.FormValue("post_id")
-	content := r.FormValue("content")
-	log.Printf("Attempting to add comment to post %s: %s", postID, content)
+	content := strings.TrimSpace(r.FormValue("content"))
+
+	// Проверяем, что комментарий не пустой
+	if content == "" {
+		log.Printf("Empty comment content")
+		http.Error(w, "Comment cannot be empty", http.StatusBadRequest)
+		return
+	}
 
 	// Проверяем, что postID является числом
 	pid, err := strconv.ParseInt(postID, 10, 64)
