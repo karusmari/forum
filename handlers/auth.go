@@ -69,7 +69,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-
+	//this will compare the password from the form with the password from the database
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
 		data := TemplateData{
@@ -79,10 +79,11 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		h.templates.ExecuteTemplate(w, "login.html", data)
 		return
 	}
-
+	//creating a new session with unique token
 	sessionToken := uuid.New().String()
 	var expiresAt time.Time
 	
+	//if the user wants to remember the session, then we will create a long-term session
 	if r.FormValue("remember_me") == "true" {
 		expiresAt = time.Now().Add(RememberDuration)
 		log.Printf("Creating long-term session (30 days) for user %d", user.ID)
@@ -91,6 +92,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Creating standard session (24 hours) for user %d", user.ID)
 	}
 
+	//starting a transaction from the database. If there is an error, then we will display an error message
 	tx, err := h.db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)
@@ -99,6 +101,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
+	//deleting the old sessions from the database
 	_, err = tx.Exec("DELETE FROM sessions WHERE user_id = ?", user.ID)
 	if err != nil {
 		log.Printf("Error deleting old sessions: %v", err)
@@ -106,6 +109,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//new session will be inserted into the database
 	_, err = tx.Exec(`
 		INSERT INTO sessions (token, user_id, expires_at)
 		VALUES (?, ?, ?)
@@ -117,12 +121,14 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//committing the transaction to the database
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
+	//session will be saved in the cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     SessionTokenCookie,
 		Value:    sessionToken,
@@ -153,7 +159,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем данные из формы
+	//getting the username, email and password from the form
 	email := r.FormValue("email")
 	username := r.FormValue("username")
 	password := r.FormValue("password")
@@ -196,7 +202,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Хешируем пароль
+	//hashing the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)

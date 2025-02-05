@@ -208,7 +208,7 @@ func main() {
 
 	// Setup routes
 	http.HandleFunc("/", h.HomeHandler)
-	http.HandleFunc("/categories", h.Categories)
+	// http.HandleFunc("/categories", h.Categories)
 	http.HandleFunc("/rules", h.Rules)
 	http.HandleFunc("/register", h.SignUp)
 	http.HandleFunc("/login", h.HandleLogin)

@@ -178,3 +178,15 @@ a:hover {
     }
 }
 
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+}
+
+.category-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1.5rem;

@@ -7,6 +7,7 @@ import (
 // Удаляем дублирующиеся функции, так как они уже определены в handlers.go
 // Удаляем CreatePost и getCategories
 
+//WHAT DO WE NEED THIS FOR??
 func (h *Handler) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		categories, err := h.getCategories()

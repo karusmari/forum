@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 
 var location *time.Location
 
+// this will initialize the location for a timezone as soon as the package is loaded
 func init() {
 	var err error
 	location, err = time.LoadLocation("Europe/Helsinki") // UTC+2
@@ -20,13 +20,14 @@ func init() {
 }
 
 func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
+	//checking if the method is POST
 	if r.Method != http.MethodPost {
 		log.Printf("Invalid method: %s", r.Method)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Проверяем куки
+	//checking if the user is authenticated
 	cookie, err := r.Cookie("session_token")
 	if err != nil {
 		log.Printf("No session cookie: %v", err)
@@ -35,6 +36,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Found session cookie: %s", cookie.Value)
 
+	//getting the user from the session
 	user := h.GetSessionUser(r)
 	if user == nil {
 		log.Printf("User not authenticated (no user found for session)")
@@ -43,6 +45,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("User authenticated: %s (ID: %d)", user.Username, user.ID)
 
+	//parsing the data from the form
 	if err := r.ParseForm(); err != nil {
 		log.Printf("Form parse error: %v", err)
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
@@ -198,11 +201,11 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"likes":    likes,
-		"dislikes": dislikes,
-	})
+	// w.Header().Set("Content-Type", "application/json")
+	// json.NewEncoder(w).Encode(map[string]interface{}{
+	// 	"likes":    likes,
+	// 	"dislikes": dislikes,
+	// })
 }
 
 func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {

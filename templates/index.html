@@ -1,5 +1,5 @@
 {{ define "content" }}
-<div class="container">
+<!-- <div class="container"> -->
     <div class="filters">
         <h3>Filters</h3>
         <form method="GET" action="/" class="filter-form">
@@ -25,7 +25,7 @@
         </form>
     </div>
 
-    <div class="posts">
+    <!-- <div class="posts">
         {{ range .Posts }}
         <article class="post-preview">
             {{ if .Categories }}
@@ -59,8 +59,22 @@
             </div>
         </article>
         {{ end }}
+    </div> -->
+
+    <div class="categories-container">
+        <div class="categories-grid">
+            {{range .Categories}}
+                <div class="category-card">
+                    <h2>{{.Name}}</h2>
+                    <p>{{.Description}}</p>
+                    <p>{{.PostCount}} posts</p>
+                    <a href="/category/{{.ID}}" class="view-posts">View Posts</a>
+                </div>
+            {{end}}
+        </div>
     </div>
-</div>
+<!-- 
+</div> -->
 
 <script src="/static/js/reactions.js"></script>
 <script src="/static/js/filters.js"></script>
