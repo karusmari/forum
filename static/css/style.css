@@ -5,7 +5,7 @@ header {
     background-repeat: no-repeat;
     /* background-size: initial; */
     height: 30vh; 
-    width: 100%;
+    width: 120%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -159,8 +159,8 @@ nav {
 footer {
     background-color: #333;
     color: white;
-    padding: 2rem 0;
-    margin-top: 3rem;
+    padding: 0;
+    margin-top: 0;
 }
 
 .footer-content {
