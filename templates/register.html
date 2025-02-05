@@ -1,30 +1,43 @@
 {{define "register.html"}}
     {{template "header" .}}
-    <div class="auth-container">
-        <h1>Sign Up</h1>
-        {{if .Error}}
-            <div class="error-message" style="color: #ff0000;">
-                {{.Error}}
+    <div class="container">
+        <div class="login-container">
+            <div class="login-title">
+                <span>Sign Up</span>
             </div>
-        {{end}}
-        <form method="POST" action="/register" class="auth-form">
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <button type="submit">Sign Up</button>
-        </form>
-        <p class="auth-links">
-            Already have an account? <a href="/login">Login here</a>
-        </p>
+            {{if .Error}}
+                <div class="error-message">
+                    {{.Error}}
+                </div>
+            {{end}}
+            <form method="POST" action="/register" class="auth-container">
+                <div class="input-wrapper">
+                    <input type="text" id="email" name="email" class="input-field" required>
+                    <label for="email" class="label">Email</label>
+                    <i class="fa-regular fa-email icon"></i>
+                </div>
+
+                <div class="input-wrapper">
+                    <input type="text" id="username" name="username" class="input-field" required>
+                    <label for="username" class="label">Username</label>
+                    <i class="fa-regular fa-user icon"></i>
+                </div>
+
+                <div class="input-wrapper">
+                    <input type="password" id="pass" name="password" class="input-field" required>
+                    <label for="pass" class="label">Password</label>
+                    <i class="fa-solid fa-lock icon"></i>
+                </div>
+
+                <div class="input-wrapper">
+                    <input type="submit" value="Sign Up" class="input-submit">
+                </div>
+
+                <div class="input-wrapper">
+                    <span>Already have an account <a href="/login">Login</a></span>
+                </div>
+            </form>
+        </div>
     </div>
     {{template "footer" .}}
 {{end}} 

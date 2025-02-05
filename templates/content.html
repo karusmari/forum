@@ -1,0 +1,70 @@
+{{ define "content" }}
+<div class="container">
+    <div class="filters">
+        <h3>Filters</h3>
+        <form method="GET" action="/" class="filter-form">
+            <select name="category" aria-label="Filter by category">
+                <option value="">All Categories</option>
+                {{ range .Categories }}
+                    <option value="{{ .ID }}" {{ if eq $.SelectedCategory .ID }}selected{{ end }}>
+                        {{ .Name }}
+                    </option>
+                {{ end }}
+            </select>
+            {{ if .User }}
+            <div class="filter-options">
+                <label>
+                    <input type="checkbox" name="my_posts" value="true" {{ if .ShowMyPosts }}checked{{ end }}>
+                    My Posts
+                </label>
+                <label>
+                    <input type="checkbox" name="liked_posts" value="true" {{ if .ShowLikedPosts }}checked{{ end }}>
+                    Liked Posts
+                </label>
+            </div>
+            {{ end }}
+            <button type="submit">Apply Filters</button>
+        </form>
+    </div>
+
+    <div class="posts">
+        {{ range .Posts }}
+        <article class="post-preview">
+            <h2><a href="/post/{{ .ID }}">{{ .Title }}</a></h2>
+            <div class="post-meta">
+                <time>{{ .CreatedAt }}</time>
+                <span class="author">By {{ .Username }}</span>
+                
+                {{ if .Categories }}
+                    <span class="post-categories">
+                        {{ range $index, $category := .Categories }}
+                            {{ if $index }}, {{ end }}
+                            {{ $category }}
+                        {{ end }}
+                    </span>
+                {{ end }}
+                
+                <span class="comment-count">
+                    <a href="/post/{{ .ID }}#comments">
+                        💬 {{ .CommentCount }} {{ if eq .CommentCount 1 }}comment{{ else }}comments{{ end }}
+                    </a>
+                </span>
+            </div>
+            
+            <div class="reactions">
+                <button class="like-btn {{ if .UserLiked }}active{{ end }}" 
+                        data-post-id="{{ .ID }}" 
+                        data-type="like">
+                    👍 {{ .Likes }}
+                </button>
+                <button class="dislike-btn {{ if .UserDisliked }}active{{ end }}" 
+                        data-post-id="{{ .ID }}" 
+                        data-type="dislike">
+                    👎 {{ .Dislikes }}
+                </button>
+            </div>
+        </article>
+        {{ end }}
+    </div>
+</div>
+{{ end }}
