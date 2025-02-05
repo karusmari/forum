@@ -10,7 +10,7 @@ body {
     line-height: 1.6;
     background-color: #f4f4f4;
     background-position: center;
-    background-image: url('/static/images/bg-loginandregister.jpg');
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: fixed;
