@@ -1,28 +1,43 @@
 {{define "login.html"}}
     {{template "header" .}}
-    <div class="auth-container">
-        <h2>Login</h2>
+    <div class="container">
+        <div class="login-container">
+            <div class="login-title">
+                <span>Login</span>
+            </div>
         {{if .Error}}
-            <div class="error">{{.Error}}</div>
+            <div class="error-message">
+                {{.Error}}
+            </div>
         {{end}}
-        <form method="POST" action="/login">
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
+        <form method="POST" action="/login" class="auth-container">
+
+            <div class="input-wrapper">
+                <input type="text" id="email" name="email" class="input-field" required>
+                <label for="email" class="label">Email</label>
+                <i class="fa-regular fa-email icon"></i>
             </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
+
+            <div class="input-wrapper">
+                <input type="password" id="pass" name="password" class="input-field" required>
+                <label for="pass" class="input-label">Password</label>
+                <i class="fa-solid fa-lock icon"></i>
             </div>
-            <div class="form-group remember-me">
-                <label>
-                    <input type="checkbox" name="remember_me" value="true">
-                    Remember me
-                </label>
+                
+            <div class="remember">
+                <div class="remember-me">
+                    <input type="checkbox" id="remember">
+                    <label for="remember">Remember Me</label>
             </div>
-            <button type="submit">Login</button>
+
+            <div class="input-wrapper">
+                <input type="submit" value="Login" class="input-submit">
+                </div>
+
+                <div class="input-wrapper">
+                    <span>Don't have an account <a href="/register">Sign Up</a></span>
+                </div>
         </form>
-        <p>Don't have an account? <a href="/register">Register</a></p>
     </div>
     {{template "footer" .}}
 {{end}} 

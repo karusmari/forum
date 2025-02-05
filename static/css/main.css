@@ -1,393 +1,180 @@
-/* Reset and base styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+:root {
+    --secondary-color: #1976d2;
+    --primary-color: #2196f3;
+    --black-color: #f4f4f4;
 }
 
+/* Переопределяем стили только для страниц логина/регистрации */
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
-    padding: 20px;
+    background-color: #f4f4f4;
+    background-position: center;
+    background-image: url('/static/images/bg-loginandregister.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
 }
 
-/* Header styles */
-header {
-    background: #333;
-    font-family: Verdana, Geneva, Tahoma, sans-serif; 
-    color: white;
-    padding: 1rem;
-    margin-bottom: 2rem;
-}
-
-a img {
-    width: 200px; /* Muuda vastavalt soovitud suurusele */
-    height: auto; /* Hoia proportsioonid õigena */
-    margin: 1px;
-}
-
-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.nav-links a {
-    color: white;
-    text-decoration: none;
-    margin-left: 1rem;
-}
-
-/* Post styles */
-.post-card {
-    background: white;
-    border: 1px solid #ddd;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 4px;
-}
-
-.post-meta {
-    color: #666;
-    font-size: 0.9em;
-    margin-bottom: 1em;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-}
-
-.post-categories {
-    margin-left: 10px;
-    display: inline-block;
-    color: #666;
-}
-
-.post-categories:before {
-    content: "Categories: ";
-    font-weight: bold;
-}
-
-/* Если вы хотите сделать категории кликабельными */
-.post-categories a {
-    color: #666;
+/* a {
+    color: var(--secondary-color);
     text-decoration: none;
 }
 
-.post-categories a:hover {
+a:hover {
     text-decoration: underline;
-}
+} */
 
-/* Стили для автора */
-.author {
-    color: #666;
-}
-
-/* Стили для времени */
-.post-meta time {
-    color: #666;
-}
-
-/* Form styles */
-.filters {
-    background: white;
-    border: 1px solid #ddd;
-    padding: 1rem;
-    margin-bottom: 2rem;
-    border-radius: 4px;
-}
-
-select, button {
-    padding: 0.5rem;
-    margin: 0.5rem;
-}
-
-/* Reaction buttons */
-.reactions {
-    margin-top: 1rem;
-}
-
-.reactions button {
-    background: none;
-    border: 1px solid #ddd;
-    padding: 5px 10px;
-    margin-right: 10px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.reactions button.active {
-    background-color: #e0e0e0;
-    border-color: #999;
-}
-
-.reactions button:hover {
-    background-color: #f0f0f0;
-}
-
-/* Auth forms */
-.auth-container {
-    max-width: 400px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-}
-
-.form-group input {
+/* Переопределяем .container для страниц логина */
+.container {
+    display: flex;
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    min-height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(0, 0, 0, 0.2);
 }
 
-.error {
-    color: red;
-    margin-bottom: 1rem;
-    padding: 0.5rem;
-    background: #ffe6e6;
-    border-radius: 4px;
+.login-container {
+    position: relative;
+    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(25px);
+    width: 450px;
+    border: 2px solid var(--primary-color);
+    padding: 7.5em 2.5em 4em 2.5em;
+    border-radius: 15px;
+    box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Post Form Styles */
-.post-form-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+.login-title {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    display: flex;
+    transform: translateX(-50%);
+    justify-content: center;
+    align-items: center;
+    width: 140px;
+    background-color: var(--primary-color);
+    border-radius: 0 0 20px 20px;
+    height: 70px;
 }
 
-.post-form .form-group {
-    margin-bottom: 1.5rem;
+.login-title span {
+    color: var(--black-color);
+    font-size: 30px;
 }
 
-.post-form label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
+.login-title ::before {
+    content: "";
+    top: 0;
+    left: -30px;
+    position: absolute;
+    border-top-right-radius: 50%;
+    width: 30px;
+    height: 30px;
+    box-shadow: 15px 0 0 0 var(--primary-color);
+    background: transparent;
+}
+    
+.login-title ::after {
+    content: "";
+    top: 0;
+    position: absolute;
+    height: 30px;
+    right: -30px;
+    width: 30px;
+    background: transparent;
+    border-top-left-radius: 50%;
+    box-shadow: -15px 0 0 0 var(--primary-color);
 }
 
-.post-form input[type="text"],
-.post-form textarea {
+.input-wrapper {
+    position: relative;
+    flex-direction: column;
+    margin: 20px 0;
+}
+
+.input-field {
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
+    font-size: 16px;
+    height: 55px;
+    color: var(--secondary-color);
+    background: transparent;
+    padding-inline: 20px 54px;
+    border-radius: 30px;
+    border: 2px solid var(--primary-color);
+    outline: none;
 }
 
-.categories-select {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
+#user {
+    margin-bottom: 10px;
 }
 
-.category-option {
+.label {
+    position: absolute;
+    transition: 0.2s;
+    top: 15px;
+    left: 20px;
+}
+
+.input-field:focus ~ .label,
+.input-field:valid .label {
+    position: absolute;
+    font-size: 14px;
+    top: 10px;
+    left: 10px;
+    background-color: var(--primary-color);
+    color: var(--black-color);
+    border-radius: 30px;
+    padding: 0 10px;
+}
+
+.icon {
+    position: absolute;
+    font-size: 20px;
+    top: 18px;
+    right: 25px;
+}
+
+.remember {
+    justify-content: space-between;
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: normal;
+    font-size: 15px;
 }
 
-.category-option input[type="checkbox"] {
-    margin: 0;
-}
-
-.post-form button {
-    background: #333;
-    color: white;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
+.input-submit {
+    background: #fff6f6;
+    width: 100%;
+    height: 50px;
+    font-size: 16px;
+    border-radius: 30px;
     cursor: pointer;
-}
-
-.post-form button:hover {
-    background: #444;
-}
-
-.filter-form {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.filter-form select {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    min-width: 200px;
-}
-
-.filter-form label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.filter-form button {
-    background: #333;
-    color: white;
+    font-weight: 500;
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
+    transition: 0.3s;
 }
 
-.filter-form button:hover {
-    background: #444;
+.input-submit:hover {
+    background: var(--secondary-color);
 }
 
-.reset-filters {
-    background: #666;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.reset-filters:hover {
-    background: #777;
-}
-
-/* Rules page */
-.rules-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.rules-content section {
-    margin-bottom: 2rem;
-}
-
-.rules-content ul {
-    list-style-type: disc;
-    margin-left: 2rem;
-}
-
-/* Categories page */
-.categories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
-    padding: 2rem;
-}
-
-.category-card {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 1.5rem;
-}
-
-.view-posts {
-    display: inline-block;
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    background: #333;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-}
-
-.view-posts:hover {
-    background: #444;
-}
-
-.category-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-.category-header {
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #ddd;
-}
-
-.category-header h1 {
-    margin-bottom: 0.5rem;
-}
-
-.no-posts {
+.signup {
     text-align: center;
-    padding: 2rem;
-    color: #666;
 }
 
-.delete-btn {
-    background: none;
-    border: none;
-    color: #ff4444;
-    cursor: pointer;
-    padding: 2px 5px;
-    font-size: 0.9em;
+.signup a {
+    font-weight: 500;
 }
 
-.delete-btn:hover {
-    color: #ff0000;
+
+
+@media only screen and (max-width: 564px) {
+    .container {
+        padding: 20px;
+    }
+    .login-container {
+        padding: 7.5em 1.5em 4em 1.5em;
+    }
 }
 
-.post-actions {
-    display: inline-flex;
-    gap: 1rem;
-    margin-left: 1rem;
-}
-
-.edit-btn {
-    color: #4444ff;
-    text-decoration: none;
-    cursor: pointer;
-    padding: 2px 5px;
-    font-size: 0.9em;
-}
-
-.edit-btn:hover {
-    color: #0000ff;
-}
-
-.post-actions .delete-btn {
-    color: #ff4444;
-}
-
-.post-actions .delete-btn:hover {
-    color: #ff0000;
-}
-
-.remember-me {
-    display: flex;
-    align-items: center;
-    margin: 1rem 0;
-}
-
-.remember-me input[type="checkbox"] {
-    margin-right: 0.5rem;
-    width: auto;
-}
-
-.remember-me label {
-    display: flex;
-    align-items: center;
-    margin: 0;
-    cursor: pointer;
-} 

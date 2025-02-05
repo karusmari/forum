@@ -24,7 +24,7 @@ type LoginRequest struct {
 
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		data := &TemplateData{
+		data := TemplateData{
 			Title: "Login",
 		}
 		h.templates.ExecuteTemplate(w, "login.html", data)
@@ -45,14 +45,30 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	var user User
+	var hashedPassword string
 	err := h.db.QueryRow(`
-		SELECT id, email, username, password_hash, is_admin
+		SELECT id, email, username, password_hash, is_admin 
 		FROM users 
 		WHERE email = ?
-	`, email).Scan(&user.ID, &user.Email, &user.Username, &user.PasswordHash, &user.IsAdmin)
+	`, email).Scan(&user.ID, &user.Email, &user.Username, &hashedPassword, &user.IsAdmin)
 
 	if err != nil {
-		data := &TemplateData{
+		if err == sql.ErrNoRows {
+			data := TemplateData{
+				Title: "Login",
+				Error: "Invalid email or password",
+			}
+			h.templates.ExecuteTemplate(w, "login.html", data)
+			return
+		}
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		data := TemplateData{
 			Title: "Login",
 			Error: "Invalid email or password",
 		}
@@ -60,20 +76,9 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		data := &TemplateData{
-			Title: "Login",
-			Error: "Invalid email or password",
-		}
-		h.templates.ExecuteTemplate(w, "login.html", data)
-		return
-	}
-
-	// Создаем сессию
 	sessionToken := uuid.New().String()
 	var expiresAt time.Time
 	
-	// Проверяем флаг "Remember me"
 	if r.FormValue("remember_me") == "true" {
 		expiresAt = time.Now().Add(RememberDuration)
 		log.Printf("Creating long-term session (30 days) for user %d", user.ID)
@@ -82,7 +87,6 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Creating standard session (24 hours) for user %d", user.ID)
 	}
 
-	// Начинаем транзакцию
 	tx, err := h.db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)
@@ -91,7 +95,6 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
-	// Удаляем старые сессии пользователя
 	_, err = tx.Exec("DELETE FROM sessions WHERE user_id = ?", user.ID)
 	if err != nil {
 		log.Printf("Error deleting old sessions: %v", err)
@@ -99,7 +102,6 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Создаем новую сессию
 	_, err = tx.Exec(`
 		INSERT INTO sessions (token, user_id, expires_at)
 		VALUES (?, ?, ?)
@@ -111,14 +113,12 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Завершаем транзакцию
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	// Устанавливаем cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     SessionTokenCookie,
 		Value:    sessionToken,
