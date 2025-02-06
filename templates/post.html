@@ -1,6 +1,11 @@
 {{define "post.html"}}
     {{template "header" .}}
     <div class="post-page">
+        <div class="back-button-container">
+            <button onclick="history.back()" class="back-button">
+                ← Back
+            </button>
+        </div>
         {{ with .Post }}
             <article class="post">
                 {{ if .Categories }}
@@ -19,6 +24,11 @@
                 </div>
 
                 <div class="reactions">
+                    <div class="post-buttons">
+                        <button class="share-button" onclick="sharePost('{{ .Title }}')">
+                            <i class="fas fa-share"></i> Share
+                        </button>
+                    </div>
                     {{ if $.User }}
                         <button class="like-btn {{ if .UserLiked }}active{{ end }}" 
                                 data-post-id="{{ .ID }}" 

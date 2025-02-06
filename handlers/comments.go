@@ -21,14 +21,14 @@ func init() {
 }
 
 func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
-	// Проверяем метод
+	// Check method
 	if r.Method != http.MethodPost {
 		log.Printf("Invalid method: %s", r.Method)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Проверяем аутентификацию
+	// Check authentication
 	user := h.GetSessionUser(r)
 	if user == nil {
 		log.Printf("User not authenticated")
@@ -36,25 +36,25 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Парсим форму
+	// Parse form
 	if err := r.ParseForm(); err != nil {
 		log.Printf("Form parse error: %v", err)
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
-	// Получаем и проверяем данные
+	// Get and validate data
 	postID := r.FormValue("post_id")
 	content := strings.TrimSpace(r.FormValue("content"))
 
-	// Проверяем, что комментарий не пустой
+	// Check if comment is not empty
 	if content == "" {
 		log.Printf("Empty comment content")
 		http.Error(w, "Comment cannot be empty", http.StatusBadRequest)
 		return
 	}
 
-	// Проверяем, что postID является числом
+	// Check if postID is a valid number
 	pid, err := strconv.ParseInt(postID, 10, 64)
 	if err != nil {
 		log.Printf("Invalid post ID: %v", err)
@@ -62,7 +62,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверяем существование поста
+	// Check if post exists
 	var exists bool
 	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM posts WHERE id = ?)", pid).Scan(&exists)
 	if err != nil {
@@ -76,12 +76,12 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Создаем комментарий с правильным временем
+	// Create comment with correct timestamp
 	now := time.Now().In(location)
 	log.Printf("Adding comment: postID=%s, userID=%d, content=%s, username=%s, time=%v",
 		postID, user.ID, content, user.Username, now)
 
-	// Начинаем транзакцию
+	// Start transaction
 	tx, err := h.db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)

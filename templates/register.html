@@ -1,8 +1,8 @@
 {{define "register.html"}}
     {{template "header" .}}
     <div class="container">
-        <div class="login-container">
-            <div class="login-title">
+        <div class="register-container">
+            <div class="register-title">
                 <span>Sign Up</span>
             </div>
             {{if .Error}}
@@ -11,6 +11,7 @@
                 </div>
             {{end}}
             <form method="POST" action="/register" class="auth-container">
+                
                 <div class="input-wrapper">
                     <input type="text" id="email" name="email" class="input-field" required>
                     <label for="email" class="label">Email</label>

@@ -12,20 +12,22 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// Initialize database
 func initDB(db *sql.DB) error {
-	// Читаем SQL файл
+	// Read SQL file
 	sqlFile, err := os.ReadFile("database/schema.sql")
 	if err != nil {
 		return err
 	}
 
-	// Выполняем SQL запросы
+	// Execute SQL queries
 	_, err = db.Exec(string(sqlFile))
 	return err
 }
 
+// Check database tables
 func checkDB(db *sql.DB) {
-	// Проверка таблицы users
+	// Check users table
 	var userCount int
 	err := db.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount)
 	if err != nil {
@@ -34,7 +36,7 @@ func checkDB(db *sql.DB) {
 		log.Printf("Users in database: %d", userCount)
 	}
 
-	// Проверка таблицы posts
+	// Check posts table
 	var postCount int
 	err = db.QueryRow("SELECT COUNT(*) FROM posts").Scan(&postCount)
 	if err != nil {
@@ -43,7 +45,7 @@ func checkDB(db *sql.DB) {
 		log.Printf("Posts in database: %d", postCount)
 	}
 
-	// Проверка таблицы categories
+	// Check categories table
 	var categoryCount int
 	err = db.QueryRow("SELECT COUNT(*) FROM categories").Scan(&categoryCount)
 	if err != nil {
@@ -53,8 +55,9 @@ func checkDB(db *sql.DB) {
 	}
 }
 
+// Add test data
 func addTestData(db *sql.DB) error {
-	// Добавляем тестовые категории
+	// Add test categories
 	categories := []string{
 		"Moving to Åland",
 		"Living in Åland",
@@ -77,7 +80,7 @@ func addTestData(db *sql.DB) error {
 		}
 	}
 
-	// Делаем первого пользователя админом
+	// Make first user an admin
 	_, err := db.Exec(`
 		UPDATE users SET is_admin = TRUE WHERE id = 1
 	`)
@@ -119,48 +122,48 @@ func initCategories(db *sql.DB) error {
 }
 
 func main() {
-	// Добавляем параметр _loc=auto для использования локального времени
+	// Add parameter _loc=auto for using local time
 	db, err := sql.Open("sqlite3", "./forum.db?_loc=auto")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Устанавливаем часовой пояс UTC+2
+	// Set timezone to UTC+2
 	_, err = db.Exec("PRAGMA timezone = '+02:00'")
 	if err != nil {
 		log.Fatal("Error setting timezone:", err)
 	}
 
-	// Проверяем существование базы данных
+	// Check if database exists
 	if _, err := os.Stat("./forum.db"); os.IsNotExist(err) {
 		log.Println("Initializing new database...")
 
-		// Получаем текущую директорию
+		// Get current directory
 		currentDir, err := os.Getwd()
 		if err != nil {
 			log.Fatal("Failed to get current directory:", err)
 		}
 		log.Printf("Current directory: %s", currentDir)
 
-		// Читаем SQL файл
+		// Read SQL file
 		sqlFile, err := os.ReadFile("./database/schema.sql")
 		if err != nil {
-			// Пробуем альтернативный путь
+			// Try alternative path
 			sqlFile, err = os.ReadFile("../database/schema.sql")
 			if err != nil {
 				log.Fatal("Failed to read schema.sql:", err)
 			}
 		}
 
-		// Выполняем SQL запросы
+		// Execute SQL queries
 		_, err = db.Exec(string(sqlFile))
 		if err != nil {
 			log.Printf("SQL Error: %v", err)
 			log.Fatal("Failed to initialize database:", err)
 		}
 
-		// Добавляем базовые категории
+		// Add base categories
 		if err := initCategories(db); err != nil {
 			log.Fatal("Failed to initialize categories:", err)
 		}
@@ -168,7 +171,7 @@ func main() {
 		log.Println("Database initialized successfully")
 	}
 
-	// Проверяем существование таблиц
+	// Check if tables exist
 	tables := []string{"users", "posts", "categories", "comments", "reactions", "sessions"}
 	for _, table := range tables {
 		var count int
@@ -179,7 +182,7 @@ func main() {
 		if count == 0 {
 			log.Printf("Table %s does not exist, reinitializing database", table)
 
-			// Пересоздаем базу данных
+			// Recreate database
 			sqlFile, err := os.ReadFile("./database/schema.sql")
 			if err != nil {
 				sqlFile, err = os.ReadFile("../database/schema.sql")
@@ -193,7 +196,7 @@ func main() {
 				log.Fatal("Failed to reinitialize database:", err)
 			}
 
-			// Добавляем категории после пересоздания базы
+			// Add categories after recreating database
 			if err := initCategories(db); err != nil {
 				log.Fatal("Failed to initialize categories after reinit:", err)
 			}
