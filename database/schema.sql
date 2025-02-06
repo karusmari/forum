@@ -1,11 +1,11 @@
--- Delete old tables in correct order (dependent first)
-DROP TABLE IF EXISTS reactions;
-DROP TABLE IF EXISTS comments;
-DROP TABLE IF EXISTS post_categories;
-DROP TABLE IF EXISTS sessions;
-DROP TABLE IF EXISTS posts;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS users;
+-- Drop old tables in the correct order (dependents first)
+-- DROP TABLE IF EXISTS reactions;
+-- DROP TABLE IF EXISTS comments;
+-- DROP TABLE IF EXISTS post_categories;
+-- DROP TABLE IF EXISTS sessions;
+-- DROP TABLE IF EXISTS posts;
+-- DROP TABLE IF EXISTS categories;
+-- DROP TABLE IF EXISTS users;
 
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (

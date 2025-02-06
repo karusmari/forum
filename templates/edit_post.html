@@ -1,5 +1,6 @@
 {{define "edit_post.html"}}
     {{template "header" .}}
+
     <div class="post-form-container">
         <h2>Edit Post</h2>
         <form class="post-form" method="POST">
@@ -15,10 +16,11 @@
                 <label>Categories:</label>
                 <div class="categories-select">
                     {{range .Categories}}
+                    {{- $categoryName := .Name}} 
                         <label class="category-option">
                             <input type="checkbox" name="categories" value="{{.ID}}"
                                 {{range $.Post.Categories}}
-                                    {{if eq . $.Name}}checked{{end}}
+                                    {{if eq . $categoryName}}checked{{end}}
                                 {{end}}>
                             {{.Name}}
                         </label>

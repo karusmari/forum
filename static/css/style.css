@@ -10,7 +10,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* position: relative; */
+    position: relative;
     padding: 0;
     margin: 0;
     overflow: hidden;
@@ -38,28 +38,74 @@ a:hover {
     text-decoration: underline;
 }
 
-/* Navigation styles */
-nav {
+/* Navigation */
+
+/* .navigation-container {
+    width: 100%;
+    background-color: #333;
+    padding: 10px 0;
     display: flex;
-    justify-content: space-between;
-    align-items: right;
-    max-width: 1200px;
-    margin: 0 auto;
-    vertical-align: bottom;
+    justify-content: center;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
 }
 
 .nav-links a {
     color: white;
     text-decoration: none;
-    padding: 0.5rem 1rem;
-    transition: color 0.3s ease;
-    position: right bo;
-    text-decoration: double;
-    vertical-align: bottom;
+    font-size: 18px;
+    padding: 10px 15px;
+    transition: background 0.3s;
+}
+
+.nav-links a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+} */
+nav {
+    position: relative;
+    /* bottom: 20px;
+    right: 20px;
+    z-index: 10; */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem; */
+}
+
+.nav-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    /* align-items: flex-end;
+    justify-content: flex-end; */
+    background-color: #376c91;
+    border-top:  1px solid #8ab0ca !important;
+    border-bottom:  1px solid #8ab0ca !important;
+
+}
+
+.nav-links a {
+    color: rgb(1, 11, 17);
+    text-decoration: none;
+    font-size: 18px;
+    padding: 10px 15px;
+    transition: background 0.3s;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-weight: bold;
+   
+
 }
 
 .nav-links a:hover {
     color: rgb(186, 201, 206);
+    border-radius: 5px;
 }
 
 /* Content Container */
@@ -174,7 +220,7 @@ footer {
 .footer-content {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
+    /* gap: 2rem; */
     margin-bottom: 2rem;
 }
 
@@ -283,12 +329,13 @@ footer {
 }
 
 .category-link {
-    text-decoration: none;
-    color: #333;
+    text-decoration: none !important;
+    color: #010b14;
     padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
+    /* border: 1px solid #ddd; */
     border-radius: 4px;
     transition: all 0.2s ease;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
 /* Error Messages */
