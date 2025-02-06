@@ -1,3 +1,4 @@
+/* Global styles */
 header {
     background-image: url("/static/life.webp"); 
     background-size: cover;  
@@ -15,14 +16,13 @@ header {
     overflow: hidden;
 }
 
-
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Общие стили */
+/* General styles */
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
@@ -115,7 +115,7 @@ nav {
     padding: 0 1rem;
 }
 
-.filters {
+/* .filters {
     background-color: white;
     padding: 1rem;
     border-radius: 5px;
@@ -130,7 +130,7 @@ nav {
 .filter-options label {
     margin-right: 1rem;
     cursor: pointer;
-}
+} */
 
 .post-card {
     background-color: white;
@@ -339,7 +339,7 @@ footer {
 }
 
 /* Error Messages */
-.error-message {
+/* .error-message {
     background-color: #ffebee;
     color: #ff0000;
     padding: 12px 16px;
@@ -348,7 +348,7 @@ footer {
     border: 2px solid #ff0000;
     font-weight: bold;
     text-align: center;
-}
+} */
 
 .edit-form {
     margin: 10px 0;
@@ -396,7 +396,7 @@ footer {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #666;
+    color: #000000;
     margin: 5px 0;
 }
 
@@ -405,7 +405,7 @@ footer {
 }
 
 .post-categories {
-    color: #666;
+    color: #000000;
     margin-bottom: 8px;
 }
 
@@ -421,7 +421,7 @@ footer {
     align-items: center;
     gap: 10px;
     margin-bottom: 0.5rem;
-    color: #666;
+    color: #000000;
 }
 
 .comment-content {
@@ -466,12 +466,12 @@ footer {
     margin-bottom: 0.5rem;
 }
 
-.button-group {
+/* .button-group {
     display: flex;
     gap: 0.5rem;
-}
+} */
 
-.error-message {
+/* .error-message {
     background-color: #ffebee !important;
     color: #ff0000 !important;
     padding: 12px 16px !important;
@@ -489,9 +489,9 @@ footer {
     max-width: 400px;
     margin: 40px auto;
     padding: 20px;
-    background: #fff;
+    background: #b1b4bb;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .auth-form {
@@ -516,9 +516,9 @@ footer {
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
-}
+} */
 
-.auth-form button {
+/* .auth-form button {
     padding: 10px;
     background-color: #4CAF50;
     color: white;
@@ -526,28 +526,28 @@ footer {
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-}
+} */
 
-.auth-form button:hover {
+/* .auth-form button:hover {
     background-color: #45a049;
-}
+} */
 
-.auth-links {
+/* .auth-links {
     margin-top: 20px;
     text-align: center;
     color: #666;
-}
+} */
 
-.auth-links a {
+/* .auth-links a {
     color: #4CAF50;
     text-decoration: none;
-}
+} */
 
-.auth-links a:hover {
+/* .auth-links a:hover {
     text-decoration: underline;
-}
+} */
 
-.auth-container .error-message {
+/* .auth-container .error-message {
     margin: -10px 0 20px;
     padding: 15px;
     background-color: #ffebee;
@@ -559,4 +559,60 @@ footer {
     box-shadow: 0 2px 4px rgba(255, 0, 0, 0.1);
     font-size: 16px;
     line-height: 1.4;
+} */
+
+/* Back button styles */
+.back-button-container {
+    margin: 20px;
+    padding: 0 20px;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #353a4d;  /* Using direct color instead of var */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #7a87a8;  /* Using direct color instead of var */
+    color: white;
+}
+
+.back-button i {
+    margin-right: 8px;
+}
+
+.post-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.share-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #353a4d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.share-button:hover {
+    background-color: #7a87a8;
+    color: white;
+}
+
+.share-button i {
+    margin-right: 8px;
 }

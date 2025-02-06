@@ -7,7 +7,7 @@
 -- DROP TABLE IF EXISTS categories;
 -- DROP TABLE IF EXISTS users;
 
--- Создаем таблицу пользователей
+-- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
@@ -17,14 +17,14 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Создаем таблицу категорий
+-- Create categories table
 CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     description TEXT
 );
 
--- Создаем таблицу постов
+-- Create posts table
 CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS posts (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Создаем таблицу связей постов и категорий
+-- Create post_categories linking table
 CREATE TABLE IF NOT EXISTS post_categories (
     post_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS post_categories (
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
--- Создаем таблицу комментариев
+-- Create comments table
 CREATE TABLE IF NOT EXISTS comments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id INTEGER NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Создаем таблицу реакций
+-- Create reactions table
 CREATE TABLE IF NOT EXISTS reactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS reactions (
     UNIQUE(user_id, post_id, comment_id)
 );
 
--- Создаем таблицу сессий
+-- Create sessions table
 CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     token TEXT UNIQUE NOT NULL,
@@ -84,19 +84,19 @@ CREATE TABLE IF NOT EXISTS sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Создаем индексы
+-- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_reactions_post_id ON reactions(post_id);
 CREATE INDEX IF NOT EXISTS idx_reactions_comment_id ON reactions(comment_id);
 
--- Добавляем базовые категории
+-- Add base categories
 INSERT OR IGNORE INTO categories (name, description) VALUES 
     ('Studying in Åland', 'Posts about studying in Åland'),
     ('Culture and leisure in Åland', 'Posts about culture and leisure activities');
 
--- В конце файла
+-- At the end of the file
 INSERT OR IGNORE INTO categories (name, description) VALUES 
     ('Moving to Åland', 'Get insights and practical tips on relocating to Åland'),
     ('Living in Åland', 'Explore all aspects of life in Åland'),

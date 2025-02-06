@@ -144,7 +144,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
-	//if the request is GET(client enters URL), then we will display the register page
+	// If request is GET (client enters URL), display the register page
 	if r.Method == http.MethodGet {
 		data := TemplateData{
 			Title: "Sign Up",
@@ -153,18 +153,18 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//if the request is not POST, then we will display an error message
+	// If request is not POST, display an error message
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	//getting the username, email and password from the form
+	// Get username, email and password from the form
 	email := r.FormValue("email")
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	// Проверяем, существует ли уже пользователь с таким email
+	// Check if user exists with this email
 	var exists bool
 	err := h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)", email).Scan(&exists)
 	if err != nil {
@@ -185,7 +185,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверяем, существует ли пользователь с таким username
+	// Check if username is taken
 	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = ?)", username).Scan(&exists)
 	if err != nil {
 		log.Printf("Error checking username existence: %v", err)
@@ -202,7 +202,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//hashing the password
+	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
@@ -210,7 +210,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Создаем нового пользователя
+	// Create new user
 	_, err = h.db.Exec(`
 		INSERT INTO users (email, username, password_hash)
 		VALUES (?, ?, ?)
@@ -222,7 +222,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Перенаправляем на страницу входа
+	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
