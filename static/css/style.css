@@ -9,12 +9,11 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* position: relative; */
+    position: relative;
     padding: 0;
     margin: 0;
     overflow: hidden;
 }
-
 
 
 * {
@@ -41,12 +40,27 @@ a:hover {
 
 /* Navigation */
 nav {
+    position: relative;
+    /* bottom: 20px;
+    right: 20px;
+    z-index: 10; */
     display: flex;
     justify-content: space-between;
-    align-items: right;
-    max-width: 1200px;
+    align-items: center;
+    /* max-width: 1200px;
     margin: 0 auto;
-    vertical-align: bottom;
+    padding: 1rem; */
+}
+
+.nav-links {
+    position: fixed;
+    bottom: 20px;
+    right: 20px; 
+    display: flex;
+    gap: 15px;
+    z-index: 100;
+    /* align-items: flex-end;
+    justify-content: flex-end; */
 }
 
 .nav-links a {
@@ -54,9 +68,10 @@ nav {
     text-decoration: none;
     padding: 0.5rem 1rem;
     transition: color 0.3s ease;
-    position: right bo;
+    /* position: right bo;
     text-decoration: double;
-    vertical-align: bottom;
+    vertical-align: bottom; */
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
 .nav-links a:hover {

@@ -17,14 +17,20 @@
     <header>
         <nav>
             <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/rules">Rules</a>
+                <a href="/">HOME</a>
+                <!-- <a href="/categories">Categories</a> -->
+                <a href="/rules">RULES</a>
                 {{ if .User }}
-                    <a href="/post/new">Create Post</a>
-                    <a href="/logout">Logout</a>
+                    <!-- Debug info -->
+                    <div style="display:none">
+                        User ID: {{.User.ID}}
+                        Is Admin: {{.User.IsAdmin}}
+                    </div>
+                    <a href="/post/new">CREATE POST</a>
+                    <a href="/logout">LOGOUT</a>
                 {{ else }}
-                    <a href="/login">Login</a>
-                    <a href="/register">Register</a>
+                    <a href="/login">LOGIN</a>
+                    <a href="/register">REGISTER</a>
                 {{ end }}
             </div>
         </nav>
