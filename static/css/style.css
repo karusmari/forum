@@ -4,7 +4,6 @@ header {
     background-size: cover;  
     background-position: top left; 
     background-repeat: no-repeat;
-    /* background-size: initial; */
     height: 30vh; 
     width: 100%;
     display: flex;
@@ -39,43 +38,11 @@ a:hover {
 }
 
 /* Navigation */
-
-/* .navigation-container {
-    width: 100%;
-    background-color: #333;
-    padding: 10px 0;
-    display: flex;
-    justify-content: center;
-}
-
-.nav-links {
-    display: flex;
-    gap: 20px;
-}
-
-.nav-links a {
-    color: white;
-    text-decoration: none;
-    font-size: 18px;
-    padding: 10px 15px;
-    transition: background 0.3s;
-}
-
-.nav-links a:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-} */
 nav {
     position: relative;
-    /* bottom: 20px;
-    right: 20px;
-    z-index: 10; */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem; */
 }
 
 .nav-links {
@@ -83,8 +50,6 @@ nav {
     justify-content: center;
     align-items: center;
     gap: 20px;
-    /* align-items: flex-end;
-    justify-content: flex-end; */
     background-color: #376c91;
     border-top:  1px solid #8ab0ca !important;
     border-bottom:  1px solid #8ab0ca !important;
@@ -114,23 +79,6 @@ nav {
     margin: 2rem auto;
     padding: 0 1rem;
 }
-
-/* .filters {
-    background-color: white;
-    padding: 1rem;
-    border-radius: 5px;
-    margin-bottom: 2rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.filter-options {
-    margin-top: 1rem;
-}
-
-.filter-options label {
-    margin-right: 1rem;
-    cursor: pointer;
-} */
 
 .post-card {
     background-color: white;
@@ -338,17 +286,39 @@ footer {
     font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
-/* Error Messages */
-/* .error-message {
-    background-color: #ffebee;
-    color: #ff0000;
-    padding: 12px 16px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    border: 2px solid #ff0000;
-    font-weight: bold;
-    text-align: center;
-} */
+/*Categories cards*/
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+    align-items: stretch;
+}
+
+.category-card {
+    display: flex;
+    background-color:#376c91;
+    flex-direction: column;
+    justify-content: space-between;
+    text-decoration: none; 
+    color: white;
+    border: 1px solid #8bb0ca;
+    padding: 20px;
+    transition: background-color 0.3s;
+    min-height: 200px;
+}
+
+.category-card:hover {
+    background-color: rgba(130, 200, 223, 0.1); 
+}
+
+.category-card h2 {
+    min-height: 50px; 
+}
+
+.category-card p {
+    min-height: 40px; 
+}
 
 .edit-form {
     margin: 10px 0;
@@ -466,100 +436,7 @@ footer {
     margin-bottom: 0.5rem;
 }
 
-/* .button-group {
-    display: flex;
-    gap: 0.5rem;
-} */
 
-/* .error-message {
-    background-color: #ffebee !important;
-    color: #ff0000 !important;
-    padding: 12px 16px !important;
-    border-radius: 4px !important;
-    margin-bottom: 20px !important;
-    border: 2px solid #ff0000 !important;
-    font-weight: bold !important;
-    text-align: center !important;
-    box-shadow: 0 2px 4px rgba(255, 0, 0, 0.1) !important;
-    font-size: 16px !important;
-    display: block !important;
-}
-
-.auth-container {
-    max-width: 400px;
-    margin: 40px auto;
-    padding: 20px;
-    background: #b1b4bb;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-}
-
-.auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.form-group label {
-    font-weight: 500;
-    color: #333;
-}
-
-.form-group input {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-} */
-
-/* .auth-form button {
-    padding: 10px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-} */
-
-/* .auth-form button:hover {
-    background-color: #45a049;
-} */
-
-/* .auth-links {
-    margin-top: 20px;
-    text-align: center;
-    color: #666;
-} */
-
-/* .auth-links a {
-    color: #4CAF50;
-    text-decoration: none;
-} */
-
-/* .auth-links a:hover {
-    text-decoration: underline;
-} */
-
-/* .auth-container .error-message {
-    margin: -10px 0 20px;
-    padding: 15px;
-    background-color: #ffebee;
-    color: #ff0000;
-    border: 2px solid #ff0000;
-    border-radius: 4px;
-    font-weight: bold;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(255, 0, 0, 0.1);
-    font-size: 16px;
-    line-height: 1.4;
-} */
 
 /* Back button styles */
 .back-button-container {
