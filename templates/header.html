@@ -16,6 +16,25 @@
 <body>
     <header>
         <nav>
+         <!-- <div class="nav-links">
+                <a href="/">HOME</a>
+                <a href="/rules">RULES</a>
+                {{ if .User }}
+                    
+                    <div style="display:none">
+                        User ID: {{.User.ID}}
+                        Is Admin: {{.User.IsAdmin}}
+                    </div>
+                    <a href="/post/new">CREATE POST</a>
+                    <a href="/logout">LOGOUT</a>
+                {{ else }}
+                    <a href="/login">LOGIN</a>
+                    <a href="/register">REGISTER</a>
+                {{ end }}
+            </div>  -->
+        </nav>
+    </header>
+    <main>
             <div class="nav-links">
                 <a href="/">HOME</a>
                 <!-- <a href="/categories">Categories</a> -->
@@ -33,7 +52,4 @@
                     <a href="/register">REGISTER</a>
                 {{ end }}
             </div>
-        </nav>
-    </header>
-    <main>
 {{ end }} 

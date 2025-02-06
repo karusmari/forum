@@ -1,11 +1,11 @@
--- Удаляем старые таблицы в правильном порядке (сначала зависимые)
-DROP TABLE IF EXISTS reactions;
-DROP TABLE IF EXISTS comments;
-DROP TABLE IF EXISTS post_categories;
-DROP TABLE IF EXISTS sessions;
-DROP TABLE IF EXISTS posts;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS users;
+-- Drop old tables in the correct order (dependents first)
+-- DROP TABLE IF EXISTS reactions;
+-- DROP TABLE IF EXISTS comments;
+-- DROP TABLE IF EXISTS post_categories;
+-- DROP TABLE IF EXISTS sessions;
+-- DROP TABLE IF EXISTS posts;
+-- DROP TABLE IF EXISTS categories;
+-- DROP TABLE IF EXISTS users;
 
 -- Создаем таблицу пользователей
 CREATE TABLE IF NOT EXISTS users (
