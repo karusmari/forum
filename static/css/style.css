@@ -51,8 +51,8 @@ nav {
     align-items: center;
     gap: 20px;
     background-color: #376c91;
-    border-top:  1px solid #8ab0ca !important;
-    border-bottom:  1px solid #8ab0ca !important;
+    border-top:  1px solid #050505 !important;
+    border-bottom:  1px solid #050505 !important;
 
 }
 
@@ -159,14 +159,15 @@ nav {
 }
 
 footer {
-    background-color: #333;
+    background-color: #376c91;
     color: white;
     padding: 2rem 0;
     margin-top: 3rem;
+    border-top:  1px solid #050505 !important;
 }
 
 .footer-content {
-    display: grid;
+    /* display: grid; */
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     /* gap: 2rem; */
     margin-bottom: 2rem;
@@ -174,7 +175,8 @@ footer {
 
 .footer-section h4 {
     margin-bottom: 1rem;
-    color: #fff;
+    color: #0a0a0a;
+
 }
 
 .footer-section ul {
@@ -187,7 +189,7 @@ footer {
 }
 
 .footer-section a {
-    color: #fff;
+    color: #090909;
     text-decoration: none;
     transition: color 0.3s ease;
 }
@@ -202,9 +204,16 @@ footer {
     border-top: 1px solid rgba(255,255,255,0.1);
 }
 
+p {
+    margin-bottom: 1rem;
+    color:#000000;
+}
+
 /* Form styles */
 .form-group {
-    margin-bottom: 1.5rem;
+    margin: 2rem;
+    padding: 1 rem;
+    max-width: 600px;
 }
 
 .form-group label {
@@ -301,11 +310,16 @@ footer {
     flex-direction: column;
     justify-content: space-between;
     text-decoration: none; 
-    color: white;
-    border: 1px solid #8bb0ca;
+    /* color: white; */
+    /* border: 1px solid #8bb0ca; */
     padding: 20px;
     transition: background-color 0.3s;
     min-height: 200px;
+
+    border: 2px solid var(--primary-color);
+    /* padding: 7.5em 2.5em 4em 2.5em; */
+    border-radius: 15px;
+    box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.6);
 }
 
 .category-card:hover {
@@ -492,4 +506,35 @@ footer {
 
 .share-button i {
     margin-right: 8px;
+}
+
+.rules-container {
+    max-width: 600px; 
+    margin: 20px auto;  
+    padding: 5px;     
+    border: 2px solid #ccc; 
+    border-radius: 8px; 
+    background-color: #376c91; 
+
+
+    /* position: relative; */
+    /* -webkit-backdrop-filter: blur(25px); */
+    /* backdrop-filter: blur(25px); */
+    /* width: 450px; */
+    border: 2px solid var(--primary-color);
+    padding: 7.5em 2.5em 4em 2.5em;
+    border-radius: 15px;
+    box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.6);
+}
+
+.rules-content {
+    padding: 1px; 
+}
+
+.rules-container h2 {
+    text-align: center; 
+}
+
+.rules-container ul {
+    padding: 20px; 
 }
