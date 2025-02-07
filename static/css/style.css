@@ -5,7 +5,8 @@ header {
     background-position: top left; 
     background-repeat: no-repeat;
     height: 30vh; 
-    width: 100%;
+    /* width: 100%; */
+    min-width: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -14,6 +15,15 @@ header {
     margin: 0;
     overflow: hidden;
 }
+
+/* .header-image {
+    height: 30vh;
+    width: 100%;
+    min-width: 100vh;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+} */
 
 * {
     margin: 0;
@@ -26,6 +36,10 @@ body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     background-color: #f4f4f4;
+}
+
+.content {
+    padding: 20px;
 }
 
 a {
@@ -270,7 +284,7 @@ p {
 }
 
 .comment-meta {
-    display: flex;
+    /* display: flex; */
     align-items: center;
     gap: 10px;
     margin-bottom: 0.5rem;
@@ -351,14 +365,25 @@ p {
 }
 
 .edit-btn {
-    background: none;
-    border: none;
-    color: #666;
+    background: white;
+    border: solid 1px #050505;
+    color: #050505;
     cursor: pointer;
+    text-decoration: none;
+    padding: 2px;
+    border-radius: 4px;
+    margin: 2px
 }
 
 .edit-btn:hover {
     color: #333;
+}
+
+form {
+    /* display: block; */
+    margin-top: 0em;
+    /* unicode-bidi: isolate; */
+    padding: 1em;
 }
 
 .comment-count {
@@ -410,6 +435,7 @@ p {
 
 .post-page{
     margin-top: 2rem;
+    padding: 30px;
 }
 
 .comment {

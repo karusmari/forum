@@ -2,9 +2,9 @@
     {{template "header" .}}
    
     <div class="back-button-container">
-        <button onclick="history.back()" class="back-button">
+        <a href="/category/{{.Category.ID}}"><button class="back-button">
             ← Back
-        </button>
+        </button></a>
     </div>
     <div class="post-page">
         {{ with .Post }}
@@ -49,8 +49,8 @@
 
                 {{ if and $.User (eq $.User.ID .UserID) }}
                     <div class="post-actions">
-                        <a href="/post/edit/{{ .ID }}" class="edit-btn">✏️ Edit</a>
-                        <form method="POST" action="/post/delete/{{ .ID }}" style="display: inline;">
+                        <a href="/post/edit/{{.ID}}?cat={{$.Category.ID}}" class="edit-btn">✏️ Edit</a>
+                        <form method="POST" action="/post/delete/{{.ID}}" style="display: inline;">
                             <button type="submit" class="delete-btn" onclick="return confirm('Are you sure?')">🗑️ Delete</button>
                         </form>
                     </div>

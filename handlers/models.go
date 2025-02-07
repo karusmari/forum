@@ -68,3 +68,8 @@ type CommentData struct {
 	User    *User
 	Post    *Post
 }
+
+type ErrorData struct {
+    ErrorMessage string
+    ErrorCode    string
+}

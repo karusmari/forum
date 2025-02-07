@@ -33,13 +33,13 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	//this will analyze the form data and parses it
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		h.ErrorHandler(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 	//this will get the email and password from the form
@@ -66,7 +66,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Printf("Database error: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	//this will compare the password from the form with the password from the database
@@ -96,7 +96,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	tx, err := h.db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -105,7 +105,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	_, err = tx.Exec("DELETE FROM sessions WHERE user_id = ?", user.ID)
 	if err != nil {
 		log.Printf("Error deleting old sessions: %v", err)
-		http.Error(w, "Session error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Session error", http.StatusInternalServerError)
 		return
 	}
 
@@ -117,14 +117,14 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Error creating session: %v", err)
-		http.Error(w, "Session creation error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Session creation error", http.StatusInternalServerError)
 		return
 	}
 
 	//committing the transaction to the database
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
@@ -155,7 +155,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	// If request is not POST, display an error message
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -169,7 +169,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	err := h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)", email).Scan(&exists)
 	if err != nil {
 		log.Printf("Error checking email existence: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
@@ -180,7 +180,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
 			log.Printf("Template error: %v", err)
-			http.Error(w, "Error rendering page", http.StatusInternalServerError)
+			h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -189,7 +189,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = ?)", username).Scan(&exists)
 	if err != nil {
 		log.Printf("Error checking username existence: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
@@ -206,7 +206,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -218,7 +218,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Error creating user: %v", err)
-		http.Error(w, "Error creating user", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error creating user", http.StatusInternalServerError)
 		return
 	}
 

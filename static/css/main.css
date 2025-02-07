@@ -232,5 +232,80 @@ a img {
     }
 }
 
+/* body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f8d7da;
+    margin: 0;
+    font-family: Arial, sans-serif;
+} */
+
+.error-container {
+    max-width: 600px; 
+    margin: 20px auto;  
+    padding: 5px;     
+    border: 2px solid #ccc; 
+    border-radius: 8px; 
+    background-color: #376c91; 
+
+
+    /* position: relative; */
+    /* -webkit-backdrop-filter: blur(25px); */
+    /* backdrop-filter: blur(25px); */
+    /* width: 450px; */
+    border: 2px solid var(--primary-color);
+    padding: 7.5em 2.5em 4em 2.5em;
+    border-radius: 15px;
+    box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.6);
+}
+
+.error-title {
+    font-size: 24px;
+    font-weight: bold;
+    align-items: center;
+    color: #010b14;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.error-message {
+    color: #010b14;
+    font-size: 18px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+/* Back button styles */
+.back-button-container {
+    margin: 20px;
+    padding: 0 20px;;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    text-decoration: none;
+    background-color: #353a4d;  /* Using direct color instead of var */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #7a87a8;  /* Using direct color instead of var */
+    color: white;
+}
+
+.back-button i {
+    margin-right: 8px;
+}
+
+
+
 
 

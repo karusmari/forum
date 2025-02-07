@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error {{ .ErrorCode }}</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-title">Error {{ .ErrorCode }}</div>
+        <p class="error-message">{{ .ErrorMessage }}</p>
+        <a href="javascript:history.back()" class="back-button">← Back</a>
+    </div>
+</body>
+</html>

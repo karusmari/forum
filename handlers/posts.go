@@ -18,7 +18,7 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		categories, err := h.getCategories()
 		if err != nil {
-			http.Error(w, "Error loading categories", http.StatusInternalServerError)
+			h.ErrorHandler(w, "Error loading categories", http.StatusInternalServerError)
 			return
 		}
 
@@ -32,12 +32,12 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		h.ErrorHandler(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
@@ -52,14 +52,14 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	`, user.ID, title, content, user.ID)
 	if err != nil {
 		log.Printf("Error creating post: %v", err)
-		http.Error(w, "Error creating post", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error creating post", http.StatusInternalServerError)
 		return
 	}
 
 	postID, err := result.LastInsertId()
 	if err != nil {
 		log.Printf("Error getting post ID: %v", err)
-		http.Error(w, "Error getting post ID", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error getting post ID", http.StatusInternalServerError)
 		return
 	}
 
@@ -83,9 +83,14 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 	postID := strings.TrimPrefix(r.URL.Path, "/post/edit/")
 	if postID == "" {
 		log.Printf("Empty post ID")
-		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		h.ErrorHandler(w, "Invalid post ID", http.StatusBadRequest)
 		return
 	}
+
+	catId := r.URL.Query().Get("cat")
+
+	Category := Category{}
+	Category.ID, _ = strconv.ParseInt(catId, 10, 64)
 
 	user := h.GetSessionUser(r)
 	if user == nil {
@@ -107,13 +112,13 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Error getting post: %v", err)
-		http.Error(w, "Post not found", http.StatusNotFound)
+		h.ErrorHandler(w, "Post not found", http.StatusNotFound)
 		return
 	}
 
 	// Проверяем права на редактирование
 	if post.UserID != user.ID && !user.IsAdmin {
-		http.Error(w, "Not authorized to edit this post", http.StatusForbidden)
+		h.ErrorHandler(w, "Not authorized to edit this post", http.StatusForbidden)
 		return
 	}
 
@@ -121,14 +126,14 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 		// Получаем все категории
 		categories, err := h.getCategories()
 		if err != nil {
-			http.Error(w, "Error loading categories", http.StatusInternalServerError)
+			h.ErrorHandler(w, "Error loading categories", http.StatusInternalServerError)
 			return
 		}
 
 		// Получаем выбранные категории поста
 		post.Categories, err = h.getPostCategories(post.ID)
 		if err != nil {
-			http.Error(w, "Error loading post categories", http.StatusInternalServerError)
+			h.ErrorHandler(w, "Error loading post categories", http.StatusInternalServerError)
 			return
 		}
 
@@ -137,19 +142,20 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 			User:       user,
 			Post:       &post,
 			Categories: categories,
+			Category:   &Category,
 		}
 		h.templates.ExecuteTemplate(w, "edit_post.html", data)
 		return
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Обработка POST запроса
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		h.ErrorHandler(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
@@ -157,7 +163,7 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 	tx, err := h.db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -171,7 +177,7 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Error updating post: %v", err)
-		http.Error(w, "Error updating post", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error updating post", http.StatusInternalServerError)
 		return
 	}
 
@@ -179,7 +185,7 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 	_, err = tx.Exec("DELETE FROM post_categories WHERE post_id = ?", postID)
 	if err != nil {
 		log.Printf("Error deleting old categories: %v", err)
-		http.Error(w, "Error updating categories", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error updating categories", http.StatusInternalServerError)
 		return
 	}
 
@@ -198,22 +204,22 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 	// Завершаем транзакцию
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
+	http.Redirect(w, r, "/post/"+postID+"?cat="+catId, http.StatusSeeOther)
 }
 
 func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	user := h.GetSessionUser(r)
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -224,13 +230,13 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	err := h.db.QueryRow("SELECT user_id FROM posts WHERE id = ?", postID).Scan(&userID)
 	if err != nil {
 		log.Printf("Error checking post ownership: %v", err)
-		http.Error(w, "Post not found", http.StatusNotFound)
+		h.ErrorHandler(w, "Post not found", http.StatusNotFound)
 		return
 	}
 
 	// Разрешаем удаление только владельцу поста или админу
 	if userID != user.ID && !user.IsAdmin {
-		http.Error(w, "Not authorized to delete this post", http.StatusForbidden)
+		h.ErrorHandler(w, "Not authorized to delete this post", http.StatusForbidden)
 		return
 	}
 
@@ -238,7 +244,7 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	tx, err := h.db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -247,7 +253,7 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	_, err = tx.Exec("DELETE FROM comments WHERE post_id = ?", postID)
 	if err != nil {
 		log.Printf("Error deleting comments: %v", err)
-		http.Error(w, "Error deleting post", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error deleting post", http.StatusInternalServerError)
 		return
 	}
 
@@ -255,7 +261,7 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	_, err = tx.Exec("DELETE FROM post_categories WHERE post_id = ?", postID)
 	if err != nil {
 		log.Printf("Error deleting category links: %v", err)
-		http.Error(w, "Error deleting post", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error deleting post", http.StatusInternalServerError)
 		return
 	}
 
@@ -263,7 +269,7 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	_, err = tx.Exec("DELETE FROM reactions WHERE post_id = ?", postID)
 	if err != nil {
 		log.Printf("Error deleting reactions: %v", err)
-		http.Error(w, "Error deleting post", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error deleting post", http.StatusInternalServerError)
 		return
 	}
 
@@ -271,14 +277,14 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	_, err = tx.Exec("DELETE FROM posts WHERE id = ?", postID)
 	if err != nil {
 		log.Printf("Error deleting post: %v", err)
-		http.Error(w, "Error deleting post", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error deleting post", http.StatusInternalServerError)
 		return
 	}
 
 	// Завершаем транзакцию
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
-		http.Error(w, "Error deleting post", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error deleting post", http.StatusInternalServerError)
 		return
 	}
 
@@ -288,13 +294,13 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	user := h.GetSessionUser(r)
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -302,7 +308,7 @@ func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 	reactionType := r.FormValue("type")
 
 	if reactionType != "like" && reactionType != "dislike" {
-		http.Error(w, "Invalid reaction type", http.StatusBadRequest)
+		h.ErrorHandler(w, "Invalid reaction type", http.StatusBadRequest)
 		return
 	}
 
@@ -310,7 +316,7 @@ func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 	tx, err := h.db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -322,7 +328,7 @@ func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 	`, user.ID, postID)
 	if err != nil {
 		log.Printf("Error removing old reaction: %v", err)
-		http.Error(w, "Error saving reaction", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error saving reaction", http.StatusInternalServerError)
 		return
 	}
 
@@ -333,13 +339,13 @@ func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 	`, user.ID, postID, reactionType)
 	if err != nil {
 		log.Printf("Error adding new reaction: %v", err)
-		http.Error(w, "Error saving reaction", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error saving reaction", http.StatusInternalServerError)
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
@@ -354,7 +360,7 @@ func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 	`, postID).Scan(&likes, &dislikes)
 	if err != nil {
 		log.Printf("Error getting reaction counts: %v", err)
-		http.Error(w, "Error getting reaction counts", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error getting reaction counts", http.StatusInternalServerError)
 		return
 	}
 

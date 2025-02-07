@@ -60,7 +60,7 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	// Проверяем, что ID не пустой
 	if categoryIDStr == "" {
 		log.Printf("Empty category ID")
-		http.Error(w, "Category not found", http.StatusNotFound)
+		h.ErrorHandler(w, "Category not found", http.StatusNotFound)
 		return
 	}
 
@@ -68,7 +68,7 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	categoryID, err := strconv.ParseInt(categoryIDStr, 10, 64)
 	if err != nil {
 		log.Printf("Invalid category ID: %v", err)
-		http.Error(w, "Invalid category ID", http.StatusBadRequest)
+		h.ErrorHandler(w, "Invalid category ID", http.StatusBadRequest)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 		Scan(&category.ID, &category.Name, &category.Description)
 	if err != nil {
 		log.Printf("Error getting category: %v", err)
-		http.Error(w, "Category not found", http.StatusNotFound)
+		h.ErrorHandler(w, "Category not found", http.StatusNotFound)
 		return
 	}
 	log.Printf("Found category: %s", category.Name)
@@ -113,7 +113,7 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.db.Query(query, userID, categoryID)
 	if err != nil {
 		log.Printf("Error getting posts: %v", err)
-		http.Error(w, "Error getting posts", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error getting posts", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -144,7 +144,7 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		http.NotFound(w, r)
+		h.ErrorHandler(w, "Page not found", http.StatusNotFound)
 		return
 	}
 
@@ -152,7 +152,7 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	categories, err := h.getCategories()
 	if err != nil {
 		log.Printf("Error getting categories: %v", err)
-		http.Error(w, "Server error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -205,7 +205,7 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.templates.ExecuteTemplate(w, "index.html", data); err != nil {
 		log.Printf("Template error: %v", err)
-		http.Error(w, "Error rendering page", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
 	}
 }
 
@@ -213,6 +213,9 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	postID := r.URL.Path[len("/post/"):]
 	log.Printf("Getting post with ID: %s", postID)
+	catId := r.URL.Query().Get("cat")
+	Category := Category{}
+	Category.ID, _ = strconv.ParseInt(catId, 10, 64)
 
 	// Получаем пользователя из сессии
 	user := h.GetSessionUser(r)
@@ -221,7 +224,7 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	post, err := h.getPostByID(postID)
 	if err != nil {
 		log.Printf("Error getting post: %v", err)
-		http.Error(w, "Post not found", http.StatusNotFound)
+		h.ErrorHandler(w, "Post not found", http.StatusNotFound)
 		return
 	}
 
@@ -235,7 +238,7 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	comments, err := h.getComments(post.ID)
 	if err != nil {
 		log.Printf("Error getting comments: %v", err)
-		http.Error(w, "Error loading comments", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error loading comments", http.StatusInternalServerError)
 		return
 	}
 	log.Printf("Found %d comments for post %d", len(comments), post.ID)
@@ -265,11 +268,12 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 		User:            user,
 		Comments:        comments,
 		CommentDataList: commentDataList,
+		Category:        &Category,
 	}
 
 	if err := h.templates.ExecuteTemplate(w, "post.html", data); err != nil {
 		log.Printf("Template error: %v", err)
-		http.Error(w, "Error rendering page", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
 	}
 }
 
@@ -319,7 +323,7 @@ func (h *Handler) getPostByID(postID string) (*Post, error) {
 	return &post, nil
 }
 
-// Добавляем метод getComments
+// Add a new method to get comments
 func (h *Handler) getComments(postID int64) ([]*Comment, error) {
 	rows, err := h.db.Query(`
 		SELECT c.id, c.user_id, c.content, c.created_at, c.username,
@@ -357,7 +361,7 @@ func (h *Handler) getComments(postID int64) ([]*Comment, error) {
 	return comments, nil
 }
 
-// Добавляем новый метод для проверки реакций на комментарии
+// Add a new method to check reactions on comments
 func (h *Handler) hasCommentReaction(userID int64, commentID int64, reactionType string) bool {
 	var exists bool
 	err := h.db.QueryRow(`

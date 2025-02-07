@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"time"
 )
@@ -251,3 +253,18 @@ func (h *Handler) Rules(w http.ResponseWriter, r *http.Request) {
 // 	}
 // 	h.templates.ExecuteTemplate(w, "categories.html", data)
 // }
+
+func (h *Handler) ErrorHandler(w http.ResponseWriter, errorMessage string, statusCode int) {
+    w.WriteHeader(statusCode)
+
+    data := ErrorData{
+        ErrorMessage: errorMessage,
+        ErrorCode:    fmt.Sprintf("%d", statusCode),
+    }
+
+    err := h.templates.ExecuteTemplate(w, "error.html", data)
+    if err != nil {
+        log.Println("Error executing template error.html:", err)
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+    }
+}

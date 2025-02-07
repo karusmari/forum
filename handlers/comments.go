@@ -24,7 +24,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	// Check method
 	if r.Method != http.MethodPost {
 		log.Printf("Invalid method: %s", r.Method)
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -32,14 +32,14 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	user := h.GetSessionUser(r)
 	if user == nil {
 		log.Printf("User not authenticated")
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	// Parse form
 	if err := r.ParseForm(); err != nil {
 		log.Printf("Form parse error: %v", err)
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		h.ErrorHandler(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	// Check if comment is not empty
 	if content == "" {
 		log.Printf("Empty comment content")
-		http.Error(w, "Comment cannot be empty", http.StatusBadRequest)
+		h.ErrorHandler(w, "Comment cannot be empty", http.StatusBadRequest)
 		return
 	}
 
@@ -58,7 +58,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	pid, err := strconv.ParseInt(postID, 10, 64)
 	if err != nil {
 		log.Printf("Invalid post ID: %v", err)
-		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		h.ErrorHandler(w, "Invalid post ID", http.StatusBadRequest)
 		return
 	}
 
@@ -67,12 +67,12 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM posts WHERE id = ?)", pid).Scan(&exists)
 	if err != nil {
 		log.Printf("Error checking post existence: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	if !exists {
 		log.Printf("Post %d does not exist", pid)
-		http.Error(w, "Post not found", http.StatusNotFound)
+		h.ErrorHandler(w, "Post not found", http.StatusNotFound)
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	tx, err := h.db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -97,13 +97,13 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Error creating comment: %v", err)
-		http.Error(w, "Error creating comment", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error creating comment", http.StatusInternalServerError)
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
@@ -129,13 +129,13 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	user := h.GetSessionUser(r)
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -143,7 +143,7 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 	reactionType := r.FormValue("type")
 
 	if reactionType != "like" && reactionType != "dislike" {
-		http.Error(w, "Invalid reaction type", http.StatusBadRequest)
+		h.ErrorHandler(w, "Invalid reaction type", http.StatusBadRequest)
 		return
 	}
 
@@ -151,7 +151,7 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 	tx, err := h.db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -163,7 +163,7 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 	`, user.ID, commentID)
 	if err != nil {
 		log.Printf("Error removing old reaction: %v", err)
-		http.Error(w, "Error saving reaction", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error saving reaction", http.StatusInternalServerError)
 		return
 	}
 
@@ -174,13 +174,13 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 	`, user.ID, commentID, reactionType)
 	if err != nil {
 		log.Printf("Error adding new reaction: %v", err)
-		http.Error(w, "Error saving reaction", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error saving reaction", http.StatusInternalServerError)
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
@@ -195,7 +195,7 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 	`, commentID).Scan(&likes, &dislikes)
 	if err != nil {
 		log.Printf("Error getting reaction counts: %v", err)
-		http.Error(w, "Error getting reaction counts", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error getting reaction counts", http.StatusInternalServerError)
 		return
 	}
 
@@ -208,13 +208,13 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	user := h.GetSessionUser(r)
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -226,13 +226,13 @@ func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	err := h.db.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&userID)
 	if err != nil {
 		log.Printf("Error checking comment ownership: %v", err)
-		http.Error(w, "Comment not found", http.StatusNotFound)
+		h.ErrorHandler(w, "Comment not found", http.StatusNotFound)
 		return
 	}
 
 	// Разрешаем удаление только владельцу комментария или админу
 	if userID != user.ID && !user.IsAdmin {
-		http.Error(w, "Not authorized to delete this comment", http.StatusForbidden)
+		h.ErrorHandler(w, "Not authorized to delete this comment", http.StatusForbidden)
 		return
 	}
 
@@ -240,7 +240,7 @@ func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	_, err = h.db.Exec("DELETE FROM comments WHERE id = ?", commentID)
 	if err != nil {
 		log.Printf("Error deleting comment: %v", err)
-		http.Error(w, "Error deleting comment", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error deleting comment", http.StatusInternalServerError)
 		return
 	}
 
@@ -251,18 +251,18 @@ func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 // Добавляем новый обработчик для редактирования комментариев
 func (h *Handler) EditComment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	user := h.GetSessionUser(r)
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		h.ErrorHandler(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
@@ -275,13 +275,13 @@ func (h *Handler) EditComment(w http.ResponseWriter, r *http.Request) {
 	err := h.db.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&userID)
 	if err != nil {
 		log.Printf("Error checking comment ownership: %v", err)
-		http.Error(w, "Comment not found", http.StatusNotFound)
+		h.ErrorHandler(w, "Comment not found", http.StatusNotFound)
 		return
 	}
 
 	// Разрешаем редактирование только владельцу комментария или админу
 	if userID != user.ID && !user.IsAdmin {
-		http.Error(w, "Not authorized to edit this comment", http.StatusForbidden)
+		h.ErrorHandler(w, "Not authorized to edit this comment", http.StatusForbidden)
 		return
 	}
 
@@ -289,7 +289,7 @@ func (h *Handler) EditComment(w http.ResponseWriter, r *http.Request) {
 	_, err = h.db.Exec("UPDATE comments SET content = ? WHERE id = ?", newContent, commentID)
 	if err != nil {
 		log.Printf("Error updating comment: %v", err)
-		http.Error(w, "Error updating comment", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Error updating comment", http.StatusInternalServerError)
 		return
 	}
 
