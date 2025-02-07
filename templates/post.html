@@ -1,12 +1,12 @@
 {{define "post.html"}}
     {{template "header" .}}
    
+    <div class="back-button-container">
+        <button onclick="history.back()" class="back-button">
+            ← Back
+        </button>
+    </div>
     <div class="post-page">
-        <div class="back-button-container">
-            <button onclick="history.back()" class="back-button">
-                ← Back
-            </button>
-        </div>
         {{ with .Post }}
             <article class="post">
                 {{ if .Categories }}
