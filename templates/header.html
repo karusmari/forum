@@ -4,23 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .Title }} - LIFE IN ÅLAND</title>
     <link rel="icon" type="static" href="/static/flag.jpeg">
-    <!-- First load general styles -->
     <link rel="stylesheet" href="/static/css/style.css">
-    <!-- Then load specific login styles -->
     <link rel="stylesheet" href="/static/css/main.css">
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
+    <title>{{ .Title }} - LIFE IN ÅLAND</title>
     <header>
-
+        <nav></nav>
     </header>
     <main>
             <div class="nav-links">
                 <a href="/">HOME</a>
-                <!-- <a href="/categories">Categories</a> -->
                 <a href="/rules">RULES</a>
                 {{ if .User }}
                     <!-- Debug info -->
@@ -35,5 +29,5 @@
                     <a href="/register">REGISTER</a>
                 {{ end }}
             </div>
-            <div class="content">
+        </head>
 {{ end }} 
