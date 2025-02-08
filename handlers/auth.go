@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-
 const (
-	SessionTokenCookie = "session_token" //cookie's name
-	SessionDuration    = 24 * time.Hour //duration of session
+	SessionTokenCookie = "session_token"     //cookie's name
+	SessionDuration    = 24 * time.Hour      //duration of session
 	RememberDuration   = 30 * 24 * time.Hour //duration of long-term session
 )
 
@@ -80,9 +79,15 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//creating a new session with unique token
-	sessionToken := uuid.New().String()
+	sessionUUID, err := uuid.NewV4() // Generate a new UUID
+	if err != nil {
+		return
+	}
+
+	sessionToken := sessionUUID.String()
+
 	var expiresAt time.Time
-	
+
 	//if the user wants to remember the session, then we will create a long-term session
 	if r.FormValue("remember_me") == "true" {
 		expiresAt = time.Now().Add(RememberDuration)
@@ -254,7 +259,7 @@ func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-//the purpose of this function is to find the user from the session
+// the purpose of this function is to find the user from the session
 func (h *Handler) GetSessionUser(r *http.Request) *User {
 	//tries to find the session cookie, if not found, then we will return nil
 	cookie, err := r.Cookie("session_token")
