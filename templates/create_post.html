@@ -1,0 +1,40 @@
+{{define "create_post.html"}}
+    {{template "header" .}}
+    </main>
+    <div class="container">
+        <div class="create-post-container">
+            <div class="login-title">
+                <span>Create Post</span>
+            </div>
+            <form method="POST" action="/post/new" class="create-post-form">
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="content">Content:</label>
+                    <textarea id="content" name="content" rows="10" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Categories:</label>
+                    <div class="categories-group">
+                        {{range .Categories}}
+                        <label class="category-checkbox">
+                            <input type="checkbox" name="categories" value="{{.ID}}">
+                            {{.Name}}
+                        </label>
+                        {{end}}
+                    </div>
+                </div>
+                
+                <div class="button-container">
+                    <button type="submit">Create Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <main>
+    {{template "footer" .}}
+{{end}} 

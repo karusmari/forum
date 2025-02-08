@@ -1,6 +1,5 @@
 {{define "login.html"}}
     {{template "header" .}}
-
     <div class="container">
         <div class="login-container">
             <div class="login-title">
@@ -12,7 +11,6 @@
             </div>
         {{end}}
         <form method="POST" action="/login" class="auth-container">
-
             <div class="input-wrapper">
                 <input type="text" id="email" name="email" class="input-field" required placeholder="Email">
                 <i class="fa-regular fa-email icon"></i>
@@ -36,5 +34,7 @@
                 </div>
         </form>
     </div>
+    </div>
+    <main>
     {{template "footer" .}}
 {{end}} 
