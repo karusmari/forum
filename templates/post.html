@@ -2,9 +2,7 @@
     {{template "header" .}}
    
     <div class="back-button-container">
-        <button class="back-button" onclick="window.history.back()">
-            ← Back
-        </button></a>
+        <a href="javascript:void(0)" onclick="goBack()" class="back-button">← Back</a>
     </div>
     <div class="post-page">
         {{ with .Post }}
@@ -75,5 +73,21 @@
 
     <script src="/static/js/reactions.js"></script>
     <script src="/static/js/comments.js"></script>
+    <script>
+    function goBack() {
+        const referrer = document.referrer;
+        if (referrer && !referrer.includes('/post/')) {
+            window.location.href = referrer;
+        } else {
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryId = urlParams.get('cat');
+            if (categoryId) {
+                window.location.href = '/category/' + categoryId;
+            } else {
+                window.location.href = '/';
+            }
+        }
+    }
+    </script>
     {{template "footer" .}}
 {{end}} 
