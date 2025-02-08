@@ -5,43 +5,44 @@ import (
 )
 
 type User struct {
-	ID           int64  `json:"id"`
-	Email        string `json:"email"`
-	Username     string `json:"username"`
-	PasswordHash string `json:"-"`
-	IsAdmin      bool   `json:"is_admin"`
+	ID           int64  
+	Email        string 
+	Username     string 
+	PasswordHash string 
+	IsAdmin      bool   
 }
 
 type Post struct {
-	ID           int64     `json:"id"`
-	UserID       int64     `json:"user_id"`
-	Username     string    `json:"username"`
-	Title        string    `json:"title"`
-	Content      string    `json:"content"`
-	CreatedAt    time.Time `json:"created_at"`
-	Categories   []string  `json:"categories"`
+	ID           int64     
+	UserID       int64    
+	Username     string   
+	Title        string   
+	Content      string    
+	CreatedAt    time.Time 
+	Categories   []string  
 	Likes        int       `json:"likes"`
 	Dislikes     int       `json:"dislikes"`
 	UserLiked    bool      `json:"user_liked"`
 	UserDisliked bool      `json:"user_disliked"`
-	Comments     []Comment `json:"comments"`
-	CommentCount int       `json:"comment_count"`
+	Comments     []Comment 
+	CommentCount int       
+	Category    Category  
 }
 
 type Category struct {
-	ID          int64  `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          int64  
+	Name        string 
+	Description string 
 	PostCount   int 
 }
 
 type Comment struct {
-	ID           int64     `json:"id"`
-	PostID       int64     `json:"post_id"`
-	UserID       int64     `json:"user_id"`
-	Username     string    `json:"username"`
-	Content      string    `json:"content"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID           int64     
+	PostID       int64     
+	UserID       int64    
+	Username     string    
+	Content      string    
+	CreatedAt    time.Time 
 	Likes        int       `json:"likes"`
 	Dislikes     int       `json:"dislikes"`
 	UserLiked    bool      `json:"user_liked"`

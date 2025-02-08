@@ -19,33 +19,36 @@ type ReactionResponse struct {
 	Dislikes int  `json:"dislikes"`
 }
 
-func (h *Handler) HandleReaction(w http.ResponseWriter, r *http.Request) {
+//this handles the reactions for the posts (likes and dislikes)
+func (h *Handler) PostReaction(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	user := h.GetSessionUser(r)
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
+	//reading the request(body) and decoding into the ReactionRequest struct
 	var req ReactionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		h.ErrorHandler(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	// Начинаем транзакцию
+	//starting a transaction with the database
 	tx, err := h.db.Begin()
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
+	//if something goes wrong, rollback the transaction
 	defer tx.Rollback()
 
-	// Проверяем существующую реакцию
+	//checking if the user has already reacted to the post
 	var existingType string
 	err = tx.QueryRow(`
 		SELECT type FROM reactions 
@@ -53,8 +56,9 @@ func (h *Handler) HandleReaction(w http.ResponseWriter, r *http.Request) {
 		user.ID, req.PostID,
 	).Scan(&existingType)
 
+	//if there is no reaction, then we will add a new one
 	if err == sql.ErrNoRows {
-		// Если реакции нет, добавляем новую
+		//adding a new reaction
 		_, err = tx.Exec(`
 			INSERT INTO reactions (user_id, post_id, type)
 			VALUES (?, ?, ?)`,
@@ -62,14 +66,14 @@ func (h *Handler) HandleReaction(w http.ResponseWriter, r *http.Request) {
 		)
 	} else if err == nil {
 		if existingType == req.Type {
-			// Если такая же реакция уже есть, удаляем её
+			//if the user has already reacted with the same type, then we will delete the reaction
 			_, err = tx.Exec(`
 				DELETE FROM reactions 
 				WHERE user_id = ? AND post_id = ?`,
 				user.ID, req.PostID,
 			)
 		} else {
-			// Если есть другая реакция, обновляем тип
+			//if the user has reacted with a different type, then we will update the reaction
 			_, err = tx.Exec(`
 				UPDATE reactions 
 				SET type = ? 
@@ -85,7 +89,7 @@ func (h *Handler) HandleReaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем обновленные счетчики
+	//getting the updated reaction counts
 	var likes, dislikes int
 	err = tx.QueryRow(`
 		SELECT 
@@ -98,17 +102,18 @@ func (h *Handler) HandleReaction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Error getting reaction counts: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
+	//if everything is successful, commit the transaction and send the response
 	if err = tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	// Отправляем ответ
+	//creating a json response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(ReactionResponse{
 		Success:  true,
@@ -117,8 +122,10 @@ func (h *Handler) HandleReaction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+//this checks if the user has already reacted to the post with the same type
 func (h *Handler) hasUserReaction(userID int64, postID int64, reactionType string) bool {
 	var exists bool
+	//checking if the db has a reaction with the same user, post and type
 	err := h.db.QueryRow(`
 		SELECT EXISTS(
 			SELECT 1 FROM reactions 
@@ -129,38 +136,41 @@ func (h *Handler) hasUserReaction(userID int64, postID int64, reactionType strin
 	if err != nil {
 		return false
 	}
-	return exists
+	return exists //returning the result: either a reaction exists or not
 }
 
-// Добавляем обработчик реакций на комментарии
+//this handles the reactions for the comments (likes and dislikes)
 func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
+	//func to get the user from the session(are they authorized to react)
 	user := h.GetSessionUser(r)
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
+	//reading the request(body) and decoding into the ReactionRequest struct
 	var req ReactionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("Error decoding request: %v", err)
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		h.ErrorHandler(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
+	//starting a transaction with the database
 	tx, err := h.db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
 
-	// Проверяем существующую реакцию
+	//checking from the db if the user has already reacted to the comment
 	var existingType string
 	err = tx.QueryRow(`
 		SELECT type FROM reactions 
@@ -169,7 +179,7 @@ func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) 
 	).Scan(&existingType)
 
 	if err == sql.ErrNoRows {
-		// Если реакции нет, добавляем новую
+		//if there is no reaction, then we will add a new one
 		_, err = tx.Exec(`
 			INSERT INTO reactions (user_id, comment_id, type)
 			VALUES (?, ?, ?)`,
@@ -177,14 +187,14 @@ func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) 
 		)
 	} else if err == nil {
 		if existingType == req.Type {
-			// Если такая же реакция уже есть, удаляем её
+			//if the user has already reacted with the same type, then we will delete the reaction
 			_, err = tx.Exec(`
 				DELETE FROM reactions 
 				WHERE user_id = ? AND comment_id = ?`,
 				user.ID, req.CommentID,
 			)
 		} else {
-			// Если есть другая реакция, обновляем тип
+			//if the user has reacted with a different type, then we will update the reaction
 			_, err = tx.Exec(`
 				UPDATE reactions 
 				SET type = ? 
@@ -196,11 +206,11 @@ func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) 
 
 	if err != nil {
 		log.Printf("Error handling reaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	// Получаем обновленные счетчики
+	//counting the updated reaction counts
 	var likes, dislikes int
 	err = tx.QueryRow(`
 		SELECT 
@@ -217,12 +227,14 @@ func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	//if everything went fine, commit the transaction and send the response
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
+	//creating a json response which includes the updated reaction counts
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(ReactionResponse{
 		Success:  true,

@@ -62,7 +62,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if post exists
+	// Check if post exists in the db
 	var exists bool
 	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM posts WHERE id = ?)", pid).Scan(&exists)
 	if err != nil {
@@ -90,6 +90,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
+	//inserting the comment into the database
 	result, err := tx.Exec(`
 		INSERT INTO comments (post_id, user_id, content, username, created_at)
 		VALUES (?, ?, ?, ?, ?)
@@ -101,12 +102,14 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//committing the transaction
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction: %v", err)
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
+	//getting the ID of the comment
 	commentID, err := result.LastInsertId()
 	if err != nil {
 		log.Printf("Error getting comment ID: %v", err)
@@ -114,7 +117,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Created comment %d for post %d", commentID, pid)
 	}
 
-	// Проверяем, что комментарий действительно сохранился
+	//checking if the comment was successfully added into the database
 	var count int
 	err = h.db.QueryRow("SELECT COUNT(*) FROM comments WHERE id = ?", commentID).Scan(&count)
 	if err != nil {
@@ -123,105 +126,27 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Comment verification: found %d comments with ID %d", count, commentID)
 	}
 
-	// Перенаправляем обратно на страницу поста
+	//redirecting the user back to the post page
 	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
 }
 
-func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	user := h.GetSessionUser(r)
-	if user == nil {
-		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	commentID := r.FormValue("comment_id")
-	reactionType := r.FormValue("type")
-
-	if reactionType != "like" && reactionType != "dislike" {
-		h.ErrorHandler(w, "Invalid reaction type", http.StatusBadRequest)
-		return
-	}
-
-	// Начинаем транзакцию
-	tx, err := h.db.Begin()
-	if err != nil {
-		log.Printf("Error starting transaction: %v", err)
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	defer tx.Rollback()
-
-	// Удаляем существующую реакцию, если есть
-	_, err = tx.Exec(`
-		DELETE FROM reactions 
-		WHERE user_id = ? AND comment_id = ?
-	`, user.ID, commentID)
-	if err != nil {
-		log.Printf("Error removing old reaction: %v", err)
-		h.ErrorHandler(w, "Error saving reaction", http.StatusInternalServerError)
-		return
-	}
-
-	// Добавляем новую реакцию
-	_, err = tx.Exec(`
-		INSERT INTO reactions (user_id, comment_id, type)
-		VALUES (?, ?, ?)
-	`, user.ID, commentID, reactionType)
-	if err != nil {
-		log.Printf("Error adding new reaction: %v", err)
-		h.ErrorHandler(w, "Error saving reaction", http.StatusInternalServerError)
-		return
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Printf("Error committing transaction: %v", err)
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-
-	// Возвращаем обновленное количество реакций
-	var likes, dislikes int
-	err = h.db.QueryRow(`
-		SELECT 
-			COUNT(CASE WHEN type = 'like' THEN 1 END) as likes,
-			COUNT(CASE WHEN type = 'dislike' THEN 1 END) as dislikes
-		FROM reactions
-		WHERE comment_id = ?
-	`, commentID).Scan(&likes, &dislikes)
-	if err != nil {
-		log.Printf("Error getting reaction counts: %v", err)
-		h.ErrorHandler(w, "Error getting reaction counts", http.StatusInternalServerError)
-		return
-	}
-
-	// w.Header().Set("Content-Type", "application/json")
-	// json.NewEncoder(w).Encode(map[string]interface{}{
-	// 	"likes":    likes,
-	// 	"dislikes": dislikes,
-	// })
-}
-
+// handling the deletion of comments
 func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
+	//checking if the user is authenticated
 	user := h.GetSessionUser(r)
 	if user == nil {
 		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-
+	//recieving the comment ID and post ID from the HTTP POST request
 	commentID := r.FormValue("comment_id")
 	postID := r.FormValue("post_id")
 
-	// Проверяем, что пользователь имеет право удалить комментарий
+	//query is searching for the user ID of the comment
 	var userID int64
 	err := h.db.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&userID)
 	if err != nil {
@@ -230,31 +155,31 @@ func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Разрешаем удаление только владельцу комментария или админу
+	//only the owner of the comment or an admin can delete the comment
 	if userID != user.ID && !user.IsAdmin {
 		h.ErrorHandler(w, "Not authorized to delete this comment", http.StatusForbidden)
 		return
 	}
 
-	// Удаляем комментарий
-	_, err = h.db.Exec("DELETE FROM comments WHERE id = ?", commentID)
+	//Disabling the comment in the database
+	_, err = h.db.Exec("UPDATE comments SET is_deleted = TRUE WHERE id = ?", commentID)
 	if err != nil {
-		log.Printf("Error deleting comment: %v", err)
-		h.ErrorHandler(w, "Error deleting comment", http.StatusInternalServerError)
+		log.Printf("Error disabling comment: %v", err)
+		h.ErrorHandler(w, "Error disabling comment", http.StatusInternalServerError)
 		return
 	}
 
-	// Перенаправляем обратно на страницу поста
+	//redirecting the user back to the post page
 	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
 }
 
-// Добавляем новый обработчик для редактирования комментариев
+// a function to edit the comment
 func (h *Handler) EditComment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		h.ErrorHandler(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
+	//checking if the user is authenticated
 	user := h.GetSessionUser(r)
 	if user == nil {
 		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
@@ -270,7 +195,7 @@ func (h *Handler) EditComment(w http.ResponseWriter, r *http.Request) {
 	postID := r.FormValue("post_id")
 	newContent := r.FormValue("content")
 
-	// Проверяем, что пользователь имеет право редактировать комментарий
+	//query is searching for the user ID of the comment
 	var userID int64
 	err := h.db.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&userID)
 	if err != nil {
@@ -279,13 +204,13 @@ func (h *Handler) EditComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Разрешаем редактирование только владельцу комментария или админу
+	//only the owner of the comment or an admin can edit the comment
 	if userID != user.ID && !user.IsAdmin {
 		h.ErrorHandler(w, "Not authorized to edit this comment", http.StatusForbidden)
 		return
 	}
 
-	// Обновляем комментарий
+	//updating the comment in the database
 	_, err = h.db.Exec("UPDATE comments SET content = ? WHERE id = ?", newContent, commentID)
 	if err != nil {
 		log.Printf("Error updating comment: %v", err)
@@ -293,6 +218,6 @@ func (h *Handler) EditComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Перенаправляем обратно на страницу поста
+	//redirecting the user back to the post page
 	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
 }

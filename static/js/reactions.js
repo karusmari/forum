@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Обработчик для реакций на посты
+    //finding all the buttons with the class reactions
     document.querySelectorAll('.post .reactions button').forEach(button => {
         button.addEventListener('click', async function(e) {
             e.preventDefault();

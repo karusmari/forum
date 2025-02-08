@@ -106,3 +106,6 @@ INSERT OR IGNORE INTO categories (name, description) VALUES
     ('Family life in Åland', 'Support and resources for families'),
     ('Culture and leisure in Åland', 'Explore cultural events and activities'),
     ('For sale and wanted in Åland', 'Browse listings for items'); 
+
+    -- ALTER TABLE posts ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE;
+    -- ALTER TABLE comments ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE;

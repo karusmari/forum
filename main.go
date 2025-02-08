@@ -113,7 +113,7 @@ func main() {
 	http.HandleFunc("/post/new", h.CreatePost)
 	http.HandleFunc("/post/", h.GetPost)
 	http.HandleFunc("/category/", h.CategoryHandler)
-	http.HandleFunc("/api/react", h.HandleReaction)
+	http.HandleFunc("/api/react", h.PostReaction)
 	http.HandleFunc("/api/comment", h.AddComment)
 	http.HandleFunc("/api/comment/react", h.HandleCommentReaction)
 
