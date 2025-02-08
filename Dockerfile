@@ -20,7 +20,7 @@ COPY . .
 
 # Собираем приложение с включенным CGO
 ENV CGO_ENABLED=1
-RUN go build -o main .
+RUN go build -o forum .
 
 # Создаем директории для статических файлов
 RUN mkdir -p /app/static/css
@@ -29,4 +29,4 @@ RUN mkdir -p /app/static/css
 EXPOSE 8080
 
 # Запускаем приложение
-CMD ["./main"] 
+CMD ["./forum"] 
