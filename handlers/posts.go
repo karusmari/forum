@@ -282,29 +282,21 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
-	//disabling the post instead of deleting it
-	_, err = tx.Exec("UPDATE posts SET is_deleted = TRUE WHERE id = ?", postID)
+	//delete the comments
+	_, err = tx.Exec("DELETE FROM comments WHERE post_id = ?", postID)
 	if err != nil {
-		log.Printf("Error disabling post: %v", err)
-		h.ErrorHandler(w, "Error disabling post", http.StatusInternalServerError)
+		log.Printf("Error deleting comments: %v", err)
+		http.Error(w, "Error deleting post", http.StatusInternalServerError)
 		return
 	}
 
-	//disabling the comments
-	_, err = tx.Exec("UPDATE comments SET is_deleted = TRUE WHERE post_id = ?", postID)
+	//deleting the category links
+	_, err = tx.Exec("DELETE FROM post_categories WHERE post_id = ?", postID)
 	if err != nil {
-		log.Printf("Error disabling comments: %v", err)
-		h.ErrorHandler(w, "Error disabling comments", http.StatusInternalServerError)
+		log.Printf("Error deleting category links: %v", err)
+		h.ErrorHandler(w, "Error deleting post", http.StatusInternalServerError)
 		return
 	}
-
-	// // Удаляем связи с категориями
-	// _, err = tx.Exec("DELETE FROM post_categories WHERE post_id = ?", postID)
-	// if err != nil {
-	// 	log.Printf("Error deleting category links: %v", err)
-	// 	h.ErrorHandler(w, "Error deleting post", http.StatusInternalServerError)
-	// 	return
-	// }
 
 	//
 	_, err = tx.Exec("DELETE FROM reactions WHERE post_id = ?", postID)
@@ -313,14 +305,6 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		h.ErrorHandler(w, "Error deleting post", http.StatusInternalServerError)
 		return
 	}
-
-	// // Удаляем сам пост
-	// _, err = tx.Exec("DELETE FROM posts WHERE id = ?", postID)
-	// if err != nil {
-	// 	log.Printf("Error deleting post: %v", err)
-	// 	h.ErrorHandler(w, "Error deleting post", http.StatusInternalServerError)
-	// 	return
-	// }
 
 	//committing the transaction
 	if err := tx.Commit(); err != nil {

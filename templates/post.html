@@ -42,14 +42,14 @@
                     {{ end }}
                 </div>
 
-                {{ if and $.User (eq $.User.ID .UserID) }}
+                <!-- {{ if and $.User (eq $.User.ID .UserID) }}
                     <div class="post-actions">
                         <a href="/post/edit/{{.ID}}?cat={{$.Category.ID}}" class="edit-btn">✏️ Edit</a>
                         <form method="POST" action="/post/delete/{{.ID}}" style="display: inline;">
                             <button type="submit" class="delete-btn" onclick="return confirm('Are you sure?')">🗑️ Delete</button>
                         </form>
                     </div>
-                {{ end }}
+                {{ end }} -->
             </article>
 
             <div class="comments-section" id="comments">
