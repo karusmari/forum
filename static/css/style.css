@@ -174,59 +174,71 @@ nav {
 
 footer {
     background-color: #376c91;
-    color: white;
     padding: 2rem 0;
     margin-top: 3rem;
-    border-top:  1px solid #050505 !important;
+    border-top: 1px solid #050505 !important;
 }
 
 .footer-content {
     display: flex;
+    flex-direction: column;
     justify-content: center;
-    margin-bottom: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 .footer-section {
-    text-align: center;
+    margin: 1rem 0;
 }
 
-.footer-section h4 {
+.footer-section h4,
+.footer-section h5,
+.footer-section h6 {
+    color: #000000;
     margin-bottom: 1rem;
-    color: #0a0a0a;
+    text-align: left;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 1.2em;
 }
 
 .footer-section ul {
     list-style: none;
     padding: 0;
+    text-align: left;
 }
 
 .footer-section ul li {
     margin-bottom: 0.5rem;
+    text-align: left;
+    font-size: 1em;
 }
 
 .footer-section a {
-    color: #090909;
+    color: #000000;
     text-decoration: none;
     transition: color 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
 }
 
-.footer-section a:hover {
-    color: #ddd;
-}
-
-.footer-bottom {
+.footer-section:last-child {
     text-align: center;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255,255,255,0.1);
 }
 
-p {
-    margin-bottom: 1rem;
-    color:#000000;
+.footer-section:last-child p {
+    text-align: center;
+}
+
+.footer-section p {
+    color: #000000;
+    text-align: center;
+}
+
+.container.py-3.text-center {
+    text-align: center;
+}
+
+.container.py-3.text-center p {
+    color: #000000;
+    margin: 0;
 }
 
 /* Form styles */
@@ -314,6 +326,11 @@ p {
     transition: all 0.2s ease;
     font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
+.categories-container {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
 
 /*Categories cards*/
 .categories-grid {
@@ -322,6 +339,11 @@ p {
     gap: 2rem;
     padding: 2rem;
     align-items: stretch;
+    max-width: 1200px;
+}
+
+.category-page {
+    padding: 20px;
 }
 
 .category-card {

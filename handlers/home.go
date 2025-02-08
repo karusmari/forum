@@ -214,6 +214,14 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 		posts = append(posts, p)
 	}
 
+	if user == nil {
+		user = &User{
+			ID: 0,
+			Username: "",
+			Email: "",
+			IsAdmin: false,
+		}
+	}
 	//collecting all the data into a struct
 	data := TemplateData{
 		Title:    category.Name,

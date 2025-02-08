@@ -8,8 +8,8 @@
             <p>{{ .Category.Description }}</p>
             
             <div class="filters">
-                <button class="filter-btn active" onclick="filterPosts('all')">All Posts</button>
-                {{ if .User }}
+                {{ if ne .User.ID 0 }}
+                    <button class="filter-btn active" onclick="filterPosts('all')">All Posts</button>
                     <button class="filter-btn" onclick="filterPosts('my')">My Posts</button>
                     <button class="filter-btn" onclick="filterPosts('liked')">Liked Posts</button>
                 {{ end }}
