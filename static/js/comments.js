@@ -12,6 +12,15 @@ function toggleEditComment(commentId) {
     }
 }
 
+function validateComment(form) {
+    const content = form.querySelector('textarea[name="content"]').value.trim();
+    if (content === '') {
+        alert('Comment cannot be empty');
+        return false;
+    }
+    return true;
+}
+
 //adding the click event listener to the document
 document.addEventListener('click', function(e) {
     if (e.target.matches('[data-comment-id]')) {

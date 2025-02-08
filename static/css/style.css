@@ -563,3 +563,27 @@ form {
 .rules-container ul {
     padding: 20px; 
 }
+
+.filters {
+    margin: 20px 0;
+}
+.filter-btn {
+    padding: 8px 16px;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.filter-btn:hover {
+    background: #e3f2fd;
+}
+.filter-btn.active {
+    background: #2196f3;
+    color: white;
+    border-color: #2196f3;
+}
+.post-preview {
+    transition: opacity 0.3s ease;
+}

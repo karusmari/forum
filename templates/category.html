@@ -19,7 +19,7 @@
         <div class="posts" id="postsContainer">
             {{ range .Posts }}
                 <article class="post-preview" 
-                         data-user-id="{{ .UserID }}"
+                         data-is-mine="{{if eq .UserID $.User.ID }}true{{ else }}false{{ end }}"
                          data-is-liked="{{ .UserLiked }}">
                     <h2><a href="/post/{{ .ID }}?cat={{$.Category.ID}}">{{ .Title }}</a></h2>
                     <div class="post-meta">
@@ -38,66 +38,9 @@
         </div>
     </div>
 
-    <script>
-    function filterPosts(filter) {
-        const posts = document.querySelectorAll('.post-preview');
-        const currentUserId = '{{ with .User }}{{ .ID }}{{ else }}0{{ end }}';
-        
-        posts.forEach(post => {
-            let show = false;
-            switch(filter) {
-                case 'my':
-                    show = post.dataset.userId === currentUserId;
-                    break;
-                case 'liked':
-                    show = post.dataset.isLiked === "true";
-                    break;
-                default: // 'all'
-                    show = true;
-                    break;
-            }
-            
-            post.style.display = show ? 'block' : 'none';
-            if (show) {
-                post.style.opacity = '1';
-            } else {
-                post.style.opacity = '0';
-            }
-        });
 
-        // Обновляем активную кнопку
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        event.target.classList.add('active');
-    }
-    </script>
-
-    <style>
-    .filters {
-        margin: 20px 0;
-    }
-    .filter-btn {
-        padding: 8px 16px;
-        margin-right: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background: white;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    .filter-btn:hover {
-        background: #e3f2fd;
-    }
-    .filter-btn.active {
-        background: #2196f3;
-        color: white;
-        border-color: #2196f3;
-    }
-    .post-preview {
-        transition: opacity 0.3s ease;
-    }
-    </style>
+<script src="/static/js/reactions.js"></script>
+<script src="/static/js/filters.js"></script>
 
     {{template "footer" .}}
 {{end}} 
