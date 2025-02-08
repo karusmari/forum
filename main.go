@@ -115,11 +115,7 @@ func main() {
 	http.HandleFunc("/category/", h.CategoryHandler)
 	http.HandleFunc("/api/react", h.HandleReaction)
 	http.HandleFunc("/api/comment", h.AddComment)
-	http.HandleFunc("/api/comment/delete", h.DeleteComment)
-	http.HandleFunc("/api/post/delete", h.DeletePost)
-	http.HandleFunc("/post/edit/", h.EditPost)
 	http.HandleFunc("/api/comment/react", h.HandleCommentReaction)
-	http.HandleFunc("/api/comment/edit", h.EditComment)
 
 	// Serve static files
 	fs := http.FileServer(http.Dir("static"))

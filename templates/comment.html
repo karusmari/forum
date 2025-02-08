@@ -21,36 +21,10 @@
                     data-type="dislike">
                 👎 <span class="dislikes-count">{{ .Comment.Dislikes }}</span>
             </button>
-            {{ if eq .Comment.UserID .User.ID }}
-                <button onclick="toggleEditComment({{.Comment.ID}})" class="edit-btn">
-                    ✏️ Edit
-                </button>
-                <form method="POST" action="/api/comment/delete" style="display: inline;">
-                    <input type="hidden" name="comment_id" value="{{.Comment.ID}}">
-                    <input type="hidden" name="post_id" value="{{.Post.ID}}">
-                    <button type="submit" class="delete-btn" onclick="return confirm('Are you sure?')">
-                        🗑️ Delete
-                    </button>
-                </form>
-            {{ end }}
         {{ else }}
             <span class="reaction-count">👍 {{ .Comment.Likes }}</span>
             <span class="reaction-count">👎 {{ .Comment.Dislikes }}</span>
         {{ end }}
     </div>
-
-    {{ if .User }}
-        <div class="edit-form" id="edit-form-{{.Comment.ID}}" style="display: none;">
-            <form method="POST" action="/api/comment/edit">
-                <input type="hidden" name="comment_id" value="{{.Comment.ID}}">
-                <input type="hidden" name="post_id" value="{{.Post.ID}}">
-                <textarea name="content" required>{{.Comment.Content}}</textarea>
-                <div class="button-group">
-                    <button type="submit">Save</button>
-                    <button type="button" onclick="toggleEditComment({{.Comment.ID}})">Cancel</button>
-                </div>
-            </form>
-        </div>
-    {{ end }}
 </div>
 {{ end }} 
