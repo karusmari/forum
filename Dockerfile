@@ -2,31 +2,31 @@ FROM golang:1.21-bullseye
 
 WORKDIR /app
 
-# Установка SQLite и зависимостей для сборки
+# Install SQLite and build dependencies
 RUN apt-get update && apt-get install -y \
     sqlite3 \
     libsqlite3-dev \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Копируем файлы go.mod и go.sum
+# Copy go.mod and go.sum files
 COPY go.mod go.sum ./
 
-# Загружаем зависимости
+# Download dependencies
 RUN go mod download
 
-# Копируем исходный код
+# Copy the source code
 COPY . .
 
-# Собираем приложение с включенным CGO
+# Build the application with CGO enabled
 ENV CGO_ENABLED=1
 RUN go build -o forum .
 
-# Создаем директории для статических файлов
+# Create directories for static files
 RUN mkdir -p /app/static/css
 
-# Открываем порт 8080
+# Open port 8080
 EXPOSE 8080
 
-# Запускаем приложение
+# Run the application
 CMD ["./forum"] 

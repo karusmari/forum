@@ -38,12 +38,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const data = await response.json();
                 if (data.success) {
-                    // Обновляем счетчики
+                    // Update the counters
                     const post = this.closest('.post');
                     post.querySelector('.like-btn .likes-count').textContent = data.likes;
                     post.querySelector('.dislike-btn .dislikes-count').textContent = data.dislikes;
                     
-                    // Обновляем активное состояние кнопок
+                    // Update the active state of the buttons
                     if (this.classList.contains('active')) {
                         this.classList.remove('active');
                     } else {
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Обработчик для реакций на комментарии
+    // Handler for comment reactions
     document.querySelectorAll('.comment .reactions button').forEach(button => {
         button.addEventListener('click', async function(e) {
             e.preventDefault();
@@ -86,12 +86,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const data = await response.json();
                 if (data.success) {
-                    // Обновляем счетчики
+                    // Update the counters
                     const comment = this.closest('.comment');
                     comment.querySelector('.like-btn .likes-count').textContent = data.likes;
                     comment.querySelector('.dislike-btn .dislikes-count').textContent = data.dislikes;
                     
-                    // Обновляем активное состояние кнопок
+                    // Update the active state of the buttons
                     if (this.classList.contains('active')) {
                         this.classList.remove('active');
                     } else {
