@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 )
-
-// ables the user to create a new post
+     // ables the user to create a new post
 func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	//checking if the user is logged in
 	user := h.GetSessionUser(r)
@@ -59,7 +57,6 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		SELECT ?, ?, ?, username FROM users WHERE id = ?
 	`, user.ID, title, content, user.ID)
 	if err != nil {
-		log.Printf("Error creating post: %v", err)
 		h.ErrorHandler(w, "Error creating post", http.StatusInternalServerError)
 		return
 	}
@@ -67,7 +64,6 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	//getting the ID of the post
 	postID, err := result.LastInsertId()
 	if err != nil {
-		log.Printf("Error getting post ID: %v", err)
 		h.ErrorHandler(w, "Error getting post ID", http.StatusInternalServerError)
 		return
 	}
@@ -78,7 +74,6 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 			VALUES (?, ?)
 		`, postID, categoryID)
 		if err != nil {
-			log.Printf("Error adding category %s to post %d: %v", categoryID, postID, err)
 			continue
 		}
 	}
@@ -88,8 +83,6 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		h.ErrorHandler(w, "Title and content cannot be empty", http.StatusBadRequest)
 		return
 	}
-
-
 
 	//redirecting the user to the newly created post page
 	http.Redirect(w, r, "/post/"+strconv.FormatInt(postID, 10), http.StatusSeeOther)

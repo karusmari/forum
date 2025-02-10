@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -19,7 +18,6 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	//calling out the getCategories function to get all the categories
 	categories, err := h.getCategories()
 	if err != nil {
-		log.Printf("Error getting categories: %v", err)
 		h.ErrorHandler(w, "Server error", http.StatusInternalServerError)
 		return
 	}
@@ -35,7 +33,6 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		//if there is a category ID, convert it to an int64. If it fails, set the category ID to 0
 		selectedCategoryID, err = strconv.ParseInt(categoryIDStr, 10, 64)
 		if err != nil {
-			log.Printf("Invalid category ID: %v", err)
 			selectedCategoryID = 0
 		}
 	}
@@ -77,7 +74,6 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.templates.ExecuteTemplate(w, "index.html", data); err != nil {
-		log.Printf("Template error: %v", err)
 		h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
 	}
 }
@@ -87,20 +83,17 @@ func getPosts(db *sql.DB) []Post {
 
 //left join: joins the posts with categories, adds category names and counts the comments
 	query := `
-		SELECT p.id, p.title, p.content, p.username, p.created_at, p.user_id,
-			   p.likes, p.dislikes, GROUP_CONCAT(DISTINCT c.name) as categories,
-			   COUNT(DISTINCT cm.id) as comment_count
+		SELECT p.id, p.title, p.content, p.username, p.created_at, p.user_id, p.likes, p.dislikes, GROUP_CONCAT(DISTINCT c.name) as categories,
+		COUNT(DISTINCT cm.id) as comment_count
 		FROM posts p
 		LEFT JOIN post_categories pc ON p.id = pc.post_id
 		LEFT JOIN categories c ON pc.category_id = c.id
 		LEFT JOIN comments cm ON p.id = cm.post_id
-		GROUP BY p.id, p.title, p.content, p.username, p.created_at, p.user_id,
-				 p.likes, p.dislikes
+		GROUP BY p.id, p.title, p.content, p.username, p.created_at, p.user_id, p.likes, p.dislikes
 		ORDER BY p.created_at DESC
 	`
 	rows, err := db.Query(query)
 	if err != nil {
-		log.Printf("Query error: %v", err)
 		return nil
 	}
 	//close the rows when the function ends
@@ -116,17 +109,13 @@ func getPosts(db *sql.DB) []Post {
 			&p.Likes, &p.Dislikes, &categories, &p.CommentCount,
 		)
 		if err != nil {
-			log.Printf("Scan error: %v", err)
 			continue
 		}
 		//if the categories are valid, split the string by comma into a slice
 		if categories.Valid {
 			p.Categories = strings.Split(categories.String, ",")
 		}
-		//log the post details
-		log.Printf("Post: ID=%d, Title=%s, Comments=%d, Categories=%v",
-			p.ID, p.Title, p.CommentCount, p.Categories)
-			//append the post to the posts slice
+		//append the post to the posts slice
 		posts = append(posts, p)
 	}
 	return posts
@@ -135,11 +124,9 @@ func getPosts(db *sql.DB) []Post {
 func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	//recieve the category ID from the URL
 	categoryIDStr := r.URL.Path[len("/category/"):]
-	log.Printf("Accessing category with ID: %s", categoryIDStr)
 
 	//if the category ID is empty, return a 404 error
 	if categoryIDStr == "" {
-		log.Printf("Empty category ID")
 		h.ErrorHandler(w, "Category not found", http.StatusNotFound)
 		return
 	}
@@ -147,7 +134,6 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	//convert the category ID to an int64 because it is a string
 	categoryID, err := strconv.ParseInt(categoryIDStr, 10, 64)
 	if err != nil {
-		log.Printf("Invalid category ID: %v", err)
 		h.ErrorHandler(w, "Invalid category ID", http.StatusBadRequest)
 		return
 	}
@@ -157,11 +143,9 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	err = h.db.QueryRow("SELECT id, name, description FROM categories WHERE id = ?", categoryID).
 		Scan(&category.ID, &category.Name, &category.Description)
 	if err != nil {
-		log.Printf("Error getting category: %v", err)
 		h.ErrorHandler(w, "Category not found", http.StatusNotFound)
 		return
 	}
-	log.Printf("Found category: %s", category.Name)
 
 	//gets the user who has a session right now
 	user := h.GetSessionUser(r)
@@ -169,13 +153,8 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	//query to get the posts with the given category ID
 	query := `
 		SELECT p.id, p.title, p.content, p.username, p.created_at, p.user_id,
-			   COUNT(DISTINCT cm.id) as comment_count,
-			   EXISTS(
-				   SELECT 1 FROM reactions r 
-				   WHERE r.post_id = p.id 
-				   AND r.user_id = ? 
-				   AND r.type = 'like'
-			   ) as user_liked
+		COUNT(DISTINCT cm.id) as comment_count,
+		EXISTS(SELECT 1 FROM reactions r WHERE r.post_id = p.id AND r.user_id = ? AND r.type = 'like') as user_liked
 		FROM posts p
 		INNER JOIN post_categories pc ON p.id = pc.post_id
 		LEFT JOIN comments cm ON p.id = cm.post_id
@@ -193,7 +172,6 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	//starts the query to get the posts with the given category ID
 	rows, err := h.db.Query(query, userID, categoryID)
 	if err != nil {
-		log.Printf("Error getting posts: %v", err)
 		h.ErrorHandler(w, "Error getting posts", http.StatusInternalServerError)
 		return
 	}
@@ -208,7 +186,6 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 			&p.CommentCount, &p.UserLiked,
 		)
 		if err != nil {
-			log.Printf("Error scanning post: %v", err)
 			continue
 		}
 		posts = append(posts, p)
@@ -234,12 +211,10 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	h.templates.ExecuteTemplate(w, "category.html", data)
 }
 
-
 //a function to prepare the data for the post.html template
 func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	//get the post ID from the URL by cutting the /post/ from the URL
 	postID := r.URL.Path[len("/post/"):]
-	log.Printf("Getting post with ID: %s", postID)
 	//recieve the category ID from the URL
 	catId := r.URL.Query().Get("cat")
 
@@ -252,7 +227,6 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	//calling out the getPostByID function to get the post with the given ID
 	post, err := h.getPostByID(postID)
 	if err != nil {
-		log.Printf("Error getting post: %v", err)
 		h.ErrorHandler(w, "Post not found", http.StatusNotFound)
 		return
 	}
@@ -266,11 +240,9 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	//calling out the getComments function to get the comments of the post
 	comments, err := h.getComments(post.ID)
 	if err != nil {
-		log.Printf("Error getting comments: %v", err)
 		h.ErrorHandler(w, "Error loading comments", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("Found %d comments for post %d", len(comments), post.ID)
 
 	//checking if the user has liked or disliked the comments
 	if user != nil {
@@ -304,7 +276,6 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 
 	//render the post.html template with the data
 	if err := h.templates.ExecuteTemplate(w, "post.html", data); err != nil {
-		log.Printf("Template error: %v", err)
 		h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
 	}
 }
@@ -313,10 +284,9 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getPostByID(postID string) (*Post, error) {
 	var post Post
 	err := h.db.QueryRow(`
-		SELECT p.id, p.user_id, p.title, p.content, p.created_at,
-			   u.username,
-			   COUNT(DISTINCT CASE WHEN r.type = 'like' THEN r.id END) as likes,
-			   COUNT(DISTINCT CASE WHEN r.type = 'dislike' THEN r.id END) as dislikes
+		SELECT p.id, p.user_id, p.title, p.content, p.created_at, u.username,
+		COUNT(DISTINCT CASE WHEN r.type = 'like' THEN r.id END) as likes,
+		COUNT(DISTINCT CASE WHEN r.type = 'dislike' THEN r.id END) as dislikes
 		FROM posts p
 		JOIN users u ON p.user_id = u.id
 		LEFT JOIN reactions r ON p.id = r.post_id
@@ -359,8 +329,8 @@ func (h *Handler) getPostByID(postID string) (*Post, error) {
 func (h *Handler) getComments(postID int64) ([]*Comment, error) {
 	rows, err := h.db.Query(`
 		SELECT c.id, c.user_id, c.content, c.created_at, c.username,
-			   COUNT(CASE WHEN r.type = 'like' THEN 1 END) as likes,
-			   COUNT(CASE WHEN r.type = 'dislike' THEN 1 END) as dislikes
+		COUNT(CASE WHEN r.type = 'like' THEN 1 END) as likes,
+		COUNT(CASE WHEN r.type = 'dislike' THEN 1 END) as dislikes
 		FROM comments c
 		LEFT JOIN reactions r ON c.id = r.comment_id
 		WHERE c.post_id = ?

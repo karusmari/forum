@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"time"
 )
@@ -43,7 +42,7 @@ func (h *Handler) getCategories() ([]Category, error) {
 	//this will query the database to get the categories
 	rows, err := h.db.Query(`
 		SELECT c.id, c.name, c.description, 
-		       COUNT(pc.post_id) as post_count 
+		COUNT(pc.post_id) as post_count 
 		FROM categories c
 		LEFT JOIN post_categories pc ON c.id = pc.category_id
 		GROUP BY c.id, c.name, c.description
@@ -111,7 +110,6 @@ func (h *Handler) ErrorHandler(w http.ResponseWriter, errorMessage string, statu
 
     err := h.templates.ExecuteTemplate(w, "error.html", data)
     if err != nil {
-        log.Println("Error executing template error.html:", err)
         http.Error(w, "Internal Server Error", http.StatusInternalServerError)
     }
 }

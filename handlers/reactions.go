@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
@@ -84,7 +83,6 @@ func (h *Handler) PostReaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Error handling reaction: %v", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -101,14 +99,12 @@ func (h *Handler) PostReaction(w http.ResponseWriter, r *http.Request) {
 	).Scan(&likes, &dislikes)
 
 	if err != nil {
-		log.Printf("Error getting reaction counts: %v", err)
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
 	//if everything is successful, commit the transaction and send the response
-	if err = tx.Commit(); err != nil {
-		log.Printf("Error committing transaction: %v", err)
+		if err = tx.Commit(); err != nil {
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -156,18 +152,18 @@ func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) 
 	//reading the request(body) and decoding into the ReactionRequest struct
 	var req ReactionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Printf("Error decoding request: %v", err)
 		h.ErrorHandler(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
+
 	//starting a transaction with the database
 	tx, err := h.db.Begin()
 	if err != nil {
-		log.Printf("Error starting transaction: %v", err)
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
+
 	defer tx.Rollback()
 
 	//checking from the db if the user has already reacted to the comment
@@ -205,7 +201,6 @@ func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err != nil {
-		log.Printf("Error handling reaction: %v", err)
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -222,18 +217,16 @@ func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) 
 	).Scan(&likes, &dislikes)
 
 	if err != nil {
-		log.Printf("Error getting reaction counts: %v", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
 	//if everything went fine, commit the transaction and send the response
 	if err := tx.Commit(); err != nil {
-		log.Printf("Error committing transaction: %v", err)
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-
+		
 	//creating a json response which includes the updated reaction counts
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(ReactionResponse{

@@ -2,10 +2,8 @@ package handlers
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 	"time"
-
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -64,7 +62,6 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			h.templates.ExecuteTemplate(w, "login.html", data)
 			return
 		}
-		log.Printf("Database error: %v", err)
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -91,16 +88,13 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	//if the user wants to remember the session, then we will create a long-term session
 	if r.FormValue("remember_me") == "true" {
 		expiresAt = time.Now().Add(RememberDuration)
-		log.Printf("Creating long-term session (30 days) for user %d", user.ID)
 	} else {
 		expiresAt = time.Now().Add(SessionDuration)
-		log.Printf("Creating standard session (24 hours) for user %d", user.ID)
 	}
 
 	//starting a transaction from the database. If there is an error, then we will display an error message
 	tx, err := h.db.Begin()
 	if err != nil {
-		log.Printf("Error starting transaction: %v", err)
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -109,7 +103,6 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	//deleting the old sessions from the database
 	_, err = tx.Exec("DELETE FROM sessions WHERE user_id = ?", user.ID)
 	if err != nil {
-		log.Printf("Error deleting old sessions: %v", err)
 		h.ErrorHandler(w, "Session error", http.StatusInternalServerError)
 		return
 	}
@@ -121,14 +114,12 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	`, sessionToken, user.ID, expiresAt)
 
 	if err != nil {
-		log.Printf("Error creating session: %v", err)
 		h.ErrorHandler(w, "Session creation error", http.StatusInternalServerError)
 		return
 	}
 
 	//committing the transaction to the database
 	if err := tx.Commit(); err != nil {
-		log.Printf("Error committing transaction: %v", err)
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -142,9 +133,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		SameSite: http.SameSiteLaxMode,
 	})
-
 	//redirecting the user to the home page after successful login
-	log.Printf("Successfully created session for user %d", user.ID)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -173,7 +162,6 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	var exists bool
 	err := h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)", email).Scan(&exists)
 	if err != nil {
-		log.Printf("Error checking email existence: %v", err)
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -184,7 +172,6 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 			Error: "This email address is already registered",
 		}
 		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
-			log.Printf("Template error: %v", err)
 			h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
 		}
 		return
@@ -193,7 +180,6 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	// Check if username is taken
 	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = ?)", username).Scan(&exists)
 	if err != nil {
-		log.Printf("Error checking username existence: %v", err)
 		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -210,7 +196,6 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("Error hashing password: %v", err)
 		h.ErrorHandler(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -222,7 +207,6 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	`, email, username, string(hashedPassword))
 
 	if err != nil {
-		log.Printf("Error creating user: %v", err)
 		h.ErrorHandler(w, "Error creating user", http.StatusInternalServerError)
 		return
 	}
@@ -235,7 +219,6 @@ func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	//tries to find the session cookie, if not found, then we will redirect the user to the home page
 	cookie, err := r.Cookie(SessionTokenCookie)
 	if err != nil {
-		log.Printf("No session cookie found: %v", err)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
@@ -243,7 +226,8 @@ func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	//deleting the session associated with the token from the database
 	_, err = h.db.Exec("DELETE FROM sessions WHERE token = ?", cookie.Value)
 	if err != nil {
-		log.Printf("Error deleting session: %v", err)
+		h.ErrorHandler(w, "Error deleting session", http.StatusInternalServerError)
+		return
 	}
 
 	//deleting the session cookie from the user's browser
@@ -264,7 +248,6 @@ func (h *Handler) GetSessionUser(r *http.Request) *User {
 	//tries to find the session cookie, if not found, then we will return nil
 	cookie, err := r.Cookie("session_token")
 	if err != nil {
-		log.Printf("No session cookie found: %v", err)
 		return nil
 	}
 
@@ -281,12 +264,9 @@ func (h *Handler) GetSessionUser(r *http.Request) *User {
 	if err != nil {
 		//if we don't find the user, then we will return nil
 		if err != sql.ErrNoRows {
-			log.Printf("Error getting user from session: %v", err)
+			return nil
 		}
-		return nil
 	}
-
 	//if the user is found, then we will log the user's information
-	log.Printf("Found user in session: %s (ID: %d)", user.Username, user.ID)
 	return &user
 }

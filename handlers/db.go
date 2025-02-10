@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"database/sql"
-	"log"
 	"os"
 )
 
@@ -29,8 +28,6 @@ func InitDB(db *sql.DB) error {
 	if err := initCategories(db); err != nil {
 		return err
 	}
-
-	log.Println("Database initialized successfully")
 	return nil
 }
 
