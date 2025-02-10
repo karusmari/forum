@@ -2,7 +2,9 @@
     {{template "header" .}}
    
     <div class="back-button-container">
-        <button class="back-button" onclick="handleBack()">← Back</button>
+        <button onclick="handleBack()" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
     </div>
     <div class="post-page">
         {{ with .Post }}
@@ -64,22 +66,6 @@
 
     <script src="/static/js/reactions.js"></script>
     <script src="/static/js/comments.js"></script>
-    <script>
-    function handleBack() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const categoryId = urlParams.get('cat');
-        
-        if (categoryId) {
-            window.location.href = '/category/' + categoryId;
-            return;
-        }
-        
-        if (window.history.length > 1) {
-            window.history.back();
-        } else {
-            window.location.href = '/';
-        }
-    }
-    </script>
+    <script src="/static/js/navigation.js"></script>
     {{template "footer" .}}
 {{end}} 

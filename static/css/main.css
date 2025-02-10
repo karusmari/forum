@@ -1,51 +1,25 @@
-/* First general styles */
+/* ==========================================================================
+   Variables
+   ========================================================================== */
 :root {
     --secondary-color: #7a87a8;
     --primary-color: #1b1d27;
     --black-color: #f4f4f4;
 }
 
-/* Override styles only for login/registration pages */
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f4f4f4;
-    background-position: center;
+/* ==========================================================================
+   Authentication Pages
+   ========================================================================== */
+body.auth-page {
     background: linear-gradient(135deg, #6f7275 0%, #192f56 100%);
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: fixed;
 }
 
-/* Image styles in links */
-a img {
-    width: 200px; 
-    height: auto; 
-    margin: 1px; 
-}
-
-/* Override container for login pages */
-.container {
-    display: flex;
-    width: 100%;
-    height: auto;
-    min-height: fit-content;
-    justify-content: center;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.container-footer {
-    display: flex;
-    width: 100%;
-    height: auto;
-    min-height: fit-content;
-    justify-content: center;
-    background-color: rgb(0, 0, 0, 0.2);  
-}
-
+/* ==========================================================================
+   Authentication Components
+   ========================================================================== */
 .login-container,
 .register-container {
     position: relative;
@@ -57,6 +31,9 @@ a img {
     box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.6);
 }
 
+/* ==========================================================================
+   Authentication Title Components
+   ========================================================================== */
 .login-title,
 .register-title {
     position: absolute;
@@ -73,42 +50,15 @@ a img {
     height: 70px;
 }
 
-.register-title span {
-    color: var(--black-color);
-    font-size: 30px;
-}
-
-.register-title::before {
-    content: "";
-    top: 0;
-    left: -30px;
-    position: absolute;
-    border-top-right-radius: 50%;
-    width: 30px;
-    height: 30px;
-    box-shadow: 15px 0 0 0 var(--primary-color);
-    background: transparent;
-}
-
-.register-title::after {
-    content: "";
-    top: 0;
-    position: absolute;
-    height: 30px;
-    right: -30px;
-    width: 30px;
-    background: transparent;
-    border-top-left-radius: 50%;
-    box-shadow: -15px 0 0 0 var(--primary-color);
-}
-
-/* Общие стили для login и register */
 .login-title span,
 .register-title span {
     color: var(--black-color);
     font-size: 30px;
 }
 
+/* ==========================================================================
+   Title decorative elements
+   ========================================================================== */
 .login-title::before,
 .register-title::before {
     content: "";
@@ -135,6 +85,9 @@ a img {
     box-shadow: -15px 0 0 0 var(--primary-color);
 }
 
+/* ==========================================================================
+   Authentication Form Components
+   ========================================================================== */
 .input-wrapper {
     position: relative;
     flex-direction: column;
@@ -222,13 +175,16 @@ a img {
     }
 }
 
+/* ==========================================================================
+   Error Pages
+   ========================================================================== */
 .error-container {
-    max-width: 600px; 
-    margin: 20px auto;  
-    padding: 7.5em 2.5em 4em 2.5em;     
-    border: 2px solid var(--primary-color); 
-    border-radius: 15px; 
-    background-color: #376c91; 
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 7.5em 2.5em 4em 2.5em;
+    border: 2px solid var(--primary-color);
+    border-radius: 15px;
+    background-color: #376c91;
     box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.6);
 }
 
@@ -247,7 +203,10 @@ a img {
     margin-bottom: 20px;
     text-align: center;
 }
-/* Back button styles */
+
+/* ==========================================================================
+   Back button styles
+   ========================================================================== */
 .back-button-container {
     margin: 20px;
     padding: 0 20px;

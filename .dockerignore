@@ -1,21 +1,21 @@
-# Игнорируем Git
+# Git files
 .git
 .gitignore
 
-# Игнорируем базу данных SQLite
+# Database files
 *.db
 *.db-journal
 
-# Игнорируем бинарные файлы
+# Binary files
 bin/
 tmp/
 
-# Игнорируем файлы IDE
+# IDE files
 .idea/
 .vscode/
 
-# Игнорируем логи
+# Log files
 *.log
 
-# Игнорируем README.md
+# ignore readme.md
 README.md 

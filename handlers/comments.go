@@ -98,16 +98,24 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	//getting the ID of the comment
 	commentID, err := result.LastInsertId()
 	if err != nil {
-	} else {
+		h.ErrorHandler(w, "Error creating comment", http.StatusInternalServerError)
+		return
 	}
 
 	//checking if the comment was successfully added into the database
 	var count int
 	err = h.db.QueryRow("SELECT COUNT(*) FROM comments WHERE id = ?", commentID).Scan(&count)
 	if err != nil {
-	} else {
+		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if count == 0 {
+		h.ErrorHandler(w, "Failed to create comment", http.StatusInternalServerError)
+		return
 	}
 
 	//redirecting the user back to the post page
 	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
 }
+

@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>{{ .Title }} - LIFE IN ÅLAND</title>
+    <title>Forum</title>
+    <script src="/static/js/navigation.js"></script>
 </head>
 <body>
     <header>
@@ -23,7 +24,7 @@
                     User ID: {{.User.ID}}
                     Is Admin: {{.User.IsAdmin}}
                 </div>
-                <a href="/post/new">CREATE POST</a>
+                <a href="/post/new" class="create-post-btn">CREATE POST</a>
                 <a href="/logout">LOGOUT</a>
             {{ else }}
                 <a href="/login">LOGIN</a>

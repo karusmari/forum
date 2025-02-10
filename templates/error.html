@@ -10,7 +10,11 @@
     <div class="error-container">
         <div class="error-title">Error {{ .ErrorCode }}</div>
         <p class="error-message">{{ .ErrorMessage }}</p>
-        <a href="javascript:history.back()" class="back-button">← Back</a>
+        <div class="back-button-container">
+            <button onclick="handleBack()" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+        </div>
     </div>
 </body>
 </html>

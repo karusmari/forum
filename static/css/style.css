@@ -1,10 +1,53 @@
-/* Global styles */
-header {
-    background-image: url("/static/life.webp"); 
-    background-size: cover;  
-    background-position: top left; 
+/* ==========================================================================
+   Base styles and reset
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background: linear-gradient(135deg, #6f7275 0%, #192f56 100%);
+    background-position: center;
     background-repeat: no-repeat;
-    height: 30vh; 
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+/* ==========================================================================
+   Layout & Grid
+   ========================================================================== */
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: calc(100vh - 300px);
+    padding: 20px;
+}
+
+.content {
+    padding: 20px;
+}
+
+.content-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* ==========================================================================
+   Header & Navigation
+   ========================================================================== */
+header {
+    background-image: url("/static/life.webp");
+    background-size: cover;
+    background-position: top left;
+    background-repeat: no-repeat;
+    height: 30vh;
     min-width: 100vh;
     display: flex;
     align-items: center;
@@ -15,33 +58,6 @@ header {
     overflow: hidden;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* General styles */
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f4f4f4;
-}
-
-.content {
-    padding: 20px;
-}
-
-a {
-    color: var(--secondary-color);
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-/* Navigation */
 nav {
     position: relative;
     display: flex;
@@ -55,31 +71,55 @@ nav {
     align-items: center;
     gap: 20px;
     background-color: #376c91;
-    border-top:  1px solid #050505 !important;
-    border-bottom:  1px solid #050505 !important;
-
+    border-top: 1px solid #050505 !important;
+    border-bottom: 1px solid #050505 !important;
 }
 
 .nav-links a {
-    color: rgb(1, 11, 17);
+    color: #000000;
     text-decoration: none;
     font-size: 20px;
     padding: 10px 15px;
-    transition: background 0.3s;
+    transition: all 0.3s ease;
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
     font-weight: bold;
 }
 
 .nav-links a:hover {
-    color: rgb(186, 201, 206);
+    background-color: #2c5474;
+    color: #000000;
     border-radius: 5px;
+    text-decoration: none;
 }
 
-/* Transparent background class */
-.bg-transparent {
-    background-color: rgba(0, 0, 0, 0.2);
+.nav-links .create-post-btn {
+    background-color: transparent;
+    color: #000000;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
 }
 
+.nav-links .create-post-btn:hover {
+    background-color: #2c5474;
+    color: #000000;
+}
+
+/* ==========================================================================
+   Typography & Links
+   ========================================================================== */
+a {
+    color: var(--secondary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Post Components
+   ========================================================================== */
 .post-card {
     background-color: white;
     padding: 1rem;
@@ -106,15 +146,50 @@ nav {
     color: #666;
 }
 
+.post-preview {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: opacity 0.3s ease;
+}
+
 .post-meta {
     font-size: 16px;
     color: #000000;
     margin-bottom: 1rem;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 5px 0;
 }
 
 .post-meta span {
     margin-right: 1rem;
+}
+
+.post-content {
+    margin-bottom: 1rem;
+    font-size: 1em;
+}
+
+.post-page {
+    margin-top: 2rem;
+    padding: 30px;
+}
+
+.post-categories {
+    color: #000000;
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 1.2em;
+}
+
+.post-buttons {
+    display: none;
 }
 
 .category-tag {
@@ -157,6 +232,8 @@ nav {
     border: 1px solid #000000;
     border-radius: 4px;
     background: #f5f5f5;
+    display: inline-block;
+    color: #666;
 }
 
 footer {
@@ -221,7 +298,6 @@ footer {
 
 .container.py-3.text-center {
     text-align: center;
-    
 }
 
 .container.py-3.text-center p {
@@ -229,7 +305,114 @@ footer {
     margin: 0;
 }
 
-/* Form styles */
+/* ==========================================================================
+   Button Components
+   ========================================================================== */
+.back-button-container {
+    margin: 20px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #376c91;
+    color: white;
+    border: 1px solid #050505;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.back-button:hover {
+    background-color: #2c5474;
+    color: white;
+    text-decoration: none;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+    background: #e3f2fd;
+}
+
+.filter-btn.active {
+    background: #2196f3;
+    color: white;
+    border-color: #2196f3;
+}
+
+.edit-btn {
+    background: white;
+    border: solid 1px #050505;
+    color: #050505;
+    cursor: pointer;
+    text-decoration: none;
+    padding: 2px;
+    border-radius: 4px;
+    margin: 2px;
+}
+
+.edit-btn:hover {
+    color: #333;
+}
+
+.like-btn, 
+.dislike-btn {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.like-btn.active, 
+.dislike-btn.active {
+    background-color: #f0f0f0;
+    border-color: #999;
+}
+
+.create-post-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #376c91;
+    color: white;
+    border: 1px solid #050505;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.create-post-btn:hover {
+    background-color: #2c5474;
+    color: white;
+    text-decoration: none;
+}
+
+/* ==========================================================================
+   Form Components
+   ========================================================================== */
 .form-group {
     margin: 2rem;
     padding: 1 rem;
@@ -266,22 +449,25 @@ footer {
     margin-right: 0.5rem;
 }
 
-/* Posts and Content */
-.content-container {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+.edit-form {
+    margin: 10px 0;
 }
 
-.post-preview {
-    background-color: rgb(0, 0, 0, 0.2);
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.edit-form textarea {
+    width: 100%;
+    min-height: 60px;
+    margin-bottom: 10px;
+    padding: 5px;
 }
 
-/* Comments */
+form {
+    margin-top: 0em;
+    padding: 1em;
+}
+
+/* ==========================================================================
+   Comment Components
+   ========================================================================== */
 .comment {
     border: 1px solid #000000;
     border-radius: 4px;
@@ -311,7 +497,65 @@ footer {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
-/* Categories */
+.comment-count {
+    margin-left: 10px;
+    color: #666;
+}
+
+.comment-count a {
+    text-decoration: none;
+    color: black;
+}
+
+.comment-count a:hover {
+    color: #7a87a8;
+    text-decoration: underline;
+}
+
+.comment .reactions {
+    margin-top: 10px;
+}
+
+.comment .reactions button {
+    margin-right: 5px;
+}
+
+.comment-form {
+    margin: 20px 0;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    border: 1px solid #000000;
+}
+
+.comment-form textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    background-color: white;
+    font-family: Arial, sans-serif;
+}
+
+.comment-form button {
+    padding: 5px 15px;
+    background-color: #376c91;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.comment-form button:hover {
+    background-color: #2c5474;
+}
+
+/* ==========================================================================
+   Category Components
+   ========================================================================== */
 .categories-list {
     display: flex;
     flex-wrap: wrap;
@@ -327,6 +571,7 @@ footer {
     transition: all 0.2s ease;
     font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
+
 .categories-container {
     align-items: center;
     justify-content: center;
@@ -349,7 +594,7 @@ footer {
 
 .category-card {
     display: flex;
-    background-color:#376c91;
+    background-color: #376c91;
     flex-direction: column;
     justify-content: space-between;
     text-decoration: none; 
@@ -373,239 +618,9 @@ footer {
     min-height: 40px; 
 }
 
-.edit-form {
-    margin: 10px 0;
-}
-
-.edit-form textarea {
-    width: 100%;
-    min-height: 60px;
-    margin-bottom: 10px;
-    padding: 5px;
-}
-
-.button-group {
-    display: flex;
-    gap: 10px;
-}
-
-.edit-btn {
-    background: white;
-    border: solid 1px #050505;
-    color: #050505;
-    cursor: pointer;
-    text-decoration: none;
-    padding: 2px;
-    border-radius: 4px;
-    margin: 2px
-}
-
-.edit-btn:hover {
-    color: #333;
-}
-
-form {
-    margin-top: 0em;
-    padding: 1em;
-}
-
-.comment-count {
-    margin-left: 10px;
-    color: #666;
-}
-
-.comment-count a {
-    text-decoration: none;
-    color: black;
-}
-
-.comment-count a:hover {
-    color: #7a87a8;;
-    text-decoration: underline;
-}
-
-.post-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #000000;
-    margin: 5px 0;
-}
-
-.categories-header {
-    margin-bottom: 2rem;
-}
-
-.post-categories {
-    color: #000000;
-    font-weight: bold;
-    margin-bottom: 8px;
-    font-family:Verdana, Geneva, Tahoma, sans-serif;
-    font-size: 1.2em;
-}
-
-:-webkit-any(article, aside, nav, section) h1 {
-    font-size: 1.1em;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-    font-weight: bold;
-    margin-block-start: 0.83em;
-    margin-block-end: 0.83em;
-}
-
-.post-content {
-    margin-bottom: 1rem;
-    font-size: 1em;
-}
-
-.post-page {
-    margin-top: 2rem;
-    padding: 30px;
-}                       
-
-.comment-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 0.5rem;
-    color: #000000;
-}
-
-.comment-content {
-    margin: 0.5rem 0;
-}
-
-.comment .reactions {
-    margin-top: 10px;
-}
-
-.comment .reactions button {
-    margin-right: 5px;
-}
-
-.reaction-count {
-    display: inline-block;
-    padding: 5px 10px;
-    color: #666;
-}
-
-.like-btn, .dislike-btn {
-    padding: 5px 10px;
-    border: 1px solid #ddd;
-    background: none;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.like-btn.active, .dislike-btn.active {
-    background-color: #f0f0f0;
-    border-color: #999;
-}
-
-/* Back button styles */
-.back-button-container {
-    margin: 20px;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    position: relative;
-    z-index: 1;
-}
-
-.back-button {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 16px;
-    background-color: #353a4d;
-    color: white;
-    border: 1px solid #050505;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.back-button:hover {
-    background-color: rgba(130, 200, 223, 0.1);
-    color: #000000;
-    text-decoration: none;
-}
-
-/* Filter button styles */
-.filter-btn {
-    padding: 8px 16px;
-    margin-right: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.filter-btn:hover {
-    background: #e3f2fd;
-}
-
-.filter-btn.active {
-    background: #2196f3;
-    color: white;
-    border-color: #2196f3;
-}
-
-/* Comment form button styles */
-.comment-form button {
-    padding: 5px 15px;
-    background-color: #376c91;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.comment-form button:hover {
-    background-color: #2c5474;
-}
-
-.post-buttons {
-    display: none;
-}
-
-.rules-container {
-    max-width: 600px; 
-    margin: 20px auto;  
-    padding: 5px;     
-    border: 2px solid #ccc; 
-    border-radius: 8px; 
-    background-color: #376c91; 
-    border: 2px solid var(--primary-color);
-    border-radius: 15px;
-    box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.6);
-}
-
-.rules-content {
-    padding: 1px; 
-}
-
-.rules-container h2 {
-    text-align: center; 
-}
-
-.rules-container ul {
-    padding: 20px; 
-}
-
-.filters {
-    margin: 20px 0;
-}
-
-.post-preview {
-    transition: opacity 0.3s ease;
-}
-
-/* Mobile Responsive Styles */
+/* ==========================================================================
+   Media Queries
+   ========================================================================== */
 @media screen and (max-width: 768px) {
     /* Header */
     header {
@@ -715,7 +730,6 @@ form {
     }
 }
 
-/* Small Mobile Devices */
 @media screen and (max-width: 480px) {
     .nav-links a {
         font-size: 14px;
@@ -758,121 +772,40 @@ form {
     }
 }
 
-/* Comment form styles */
-.comment-form {
-    margin: 20px 0;
-    padding: 10px;
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+.bg-transparent {
     background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-    border: 1px solid #000000;
 }
 
-.comment-form textarea {
-    width: 100%;
-    min-height: 60px;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #000000;
-    border-radius: 4px;
-    background-color: white;
-    font-family: Arial, sans-serif;
+.filters {
+    margin: 20px 0;
 }
 
-.comment-form button {
-    padding: 5px 15px;
-    background-color: #376c91;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.comment-form button:hover {
-    background-color: #2c5474;
-}
-
-/* Create Post Form Styles */
-.create-post-container {
-    position: relative;
-    -webkit-backdrop-filter: blur(25px);
-    backdrop-filter: blur(25px);
-    width: 450px;
-    padding: 7.5em 2.5em 4em 2.5em;
+.rules-container {
+    max-width: 600px; 
+    margin: 20px auto;  
+    padding: 5px;     
+    border: 2px solid var(--primary-color);
     border-radius: 15px;
+    background-color: #376c91; 
     box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.6);
 }
 
-.create-post-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    width: 100%;
+.rules-content {
+    padding: 1px; 
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.rules-container h2 {
+    text-align: center; 
 }
 
-.form-group input[type="text"],
-.form-group textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #000000;
-    border-radius: 4px;
-    background-color: white;
-    color: #000000;
+.rules-container ul {
+    padding: 20px; 
 }
 
-.categories-group {
+.button-group {
     display: flex;
-    flex-direction: column;
     gap: 10px;
-}
-
-.create-post-form .button-container {
-    display: flex;
-    margin-left: 20px;
-}
-
-/* Create Post Button */
-button[type="submit"] {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 16px;
-    background-color: #353a4d;
-    color: white;
-    border: 1px solid #050505;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-    text-decoration: none;
-    font-weight: bold;
-    padding: -100px;  /* Отрицательный отступ для выравнивания по красной линии */
-}
-
-button[type="submit"]:hover {
-    background-color: rgba(130, 200, 223, 0.1);
-    color: #000000;
-    text-decoration: none;
-}
-
-.category-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #000000;
-}
-
-/* Container styles for all pages */
-.container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: calc(100vh - 300px);
-    padding: 20px;
 }

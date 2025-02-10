@@ -22,8 +22,8 @@
         <div class="posts" id="postsContainer">
             {{ range .Posts }}
                 <article class="post-preview" 
-                         data-is-mine="{{if eq .UserID $.User.ID }}true{{ else }}false{{ end }}"
-                         data-is-liked="{{ .UserLiked }}">
+                data-is-mine="{{if eq .UserID $.User.ID }}true{{ else }}false{{ end }}"
+                data-is-liked="{{ .UserLiked }}">
                     <h2><a href="/post/{{ .ID }}?cat={{$.Category.ID}}">{{ .Title }}</a></h2>
                     <div class="post-meta">
                         <time>{{ .CreatedAt.Format "02 Jan 2006 15:04" }}</time>
@@ -44,6 +44,6 @@
 
 <script src="/static/js/reactions.js"></script>
 <script src="/static/js/filters.js"></script>
-
+<script src="/static/js/navigation.js"></script>
     {{template "footer" .}}
 {{end}} 
