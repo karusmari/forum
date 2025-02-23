@@ -82,18 +82,13 @@ CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_reactions_post_id ON reactions(post_id);
 CREATE INDEX IF NOT EXISTS idx_reactions_comment_id ON reactions(comment_id);
 
--- Add base categories
+-- -- Add base categories
 INSERT OR IGNORE INTO categories (name, description) VALUES 
     ('Studying in Åland', 'Posts about studying in Åland'),
-    ('Culture and leisure in Åland', 'Posts about culture and leisure activities');
-
--- At the end of the file
-INSERT OR IGNORE INTO categories (name, description) VALUES 
+    ('Culture and leisure in Åland', 'Posts about culture and leisure activities'),
     ('Moving to Åland', 'Get insights and practical tips on relocating to Åland'),
     ('Living in Åland', 'Explore all aspects of life in Åland'),
     ('Housing in Åland', 'Guidance on finding housing in Åland'),
-    ('Studying in Åland', 'Discover everything about studying in Åland'),
     ('Jobs and entrepreneurship in Åland', 'Information about job opportunities'),
     ('Family life in Åland', 'Support and resources for families'),
-    ('Culture and leisure in Åland', 'Explore cultural events and activities'),
     ('For sale and wanted in Åland', 'Browse listings for items'); 

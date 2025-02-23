@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 // HomeHandler is a handler for the home page
@@ -25,52 +24,11 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	//getting the user from the session
 	user := h.GetSessionUser(r)
 
-	//getting the category ID from the URL
-	categoryIDStr := r.URL.Query().Get("category")
-	var selectedCategoryID int64
-	if categoryIDStr != "" {
-		var err error
-		//if there is a category ID, convert it to an int64. If it fails, set the category ID to 0
-		selectedCategoryID, err = strconv.ParseInt(categoryIDStr, 10, 64)
-		if err != nil {
-			selectedCategoryID = 0
-		}
-	}
-
-	//checking if the user has selected to see only their posts
-	showMyPosts := r.URL.Query().Get("my_posts") == "true"
-	//checking if the user has selected to see only their liked posts
-	showLikedPosts := r.URL.Query().Get("liked_posts") == "true"
-
-	//calling out the getPosts function to get all the posts
-	posts := getPosts(h.db)
-
-	//if the user is logged in
-	if user != nil {
-		//for each post, check if the user has liked or disliked the post
-		for i := range posts {
-			var reactionType string
-			err := h.db.QueryRow(`
-				SELECT type FROM reactions 
-				WHERE user_id = ? AND post_id = ?`,
-				user.ID, posts[i].ID,
-			).Scan(&reactionType)
-
-			if err == nil {
-				posts[i].UserLiked = reactionType == "like"
-				posts[i].UserDisliked = reactionType == "dislike"
-			}
-		}
-	}
-
 	//collecting all the data into a struct
+
 	data := TemplateData{
-		User:             user,
-		Posts:            posts,
-		Categories:       categories,
-		SelectedCategory: selectedCategoryID,
-		ShowMyPosts:      showMyPosts,
-		ShowLikedPosts:   showLikedPosts,
+		User:       user,
+		Categories: categories,
 	}
 
 	if err := h.templates.ExecuteTemplate(w, "index.html", data); err != nil {
@@ -78,48 +36,6 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//query from the database to get all the posts
-func getPosts(db *sql.DB) []Post {
-
-//left join: joins the posts with categories, adds category names and counts the comments
-	query := `
-		SELECT p.id, p.title, p.content, p.username, p.created_at, p.user_id, p.likes, p.dislikes, GROUP_CONCAT(DISTINCT c.name) as categories,
-		COUNT(DISTINCT cm.id) as comment_count
-		FROM posts p
-		LEFT JOIN post_categories pc ON p.id = pc.post_id
-		LEFT JOIN categories c ON pc.category_id = c.id
-		LEFT JOIN comments cm ON p.id = cm.post_id
-		GROUP BY p.id, p.title, p.content, p.username, p.created_at, p.user_id, p.likes, p.dislikes
-		ORDER BY p.created_at DESC
-	`
-	rows, err := db.Query(query)
-	if err != nil {
-		return nil
-	}
-	//close the rows when the function ends
-	defer rows.Close()
-
-
-	var posts []Post
-	for rows.Next() {
-		var p Post
-		var categories sql.NullString //sql.NullString is used to handle NULL values from the database
-		err := rows.Scan(
-			&p.ID, &p.Title, &p.Content, &p.Username, &p.CreatedAt, &p.UserID,
-			&p.Likes, &p.Dislikes, &categories, &p.CommentCount,
-		)
-		if err != nil {
-			continue
-		}
-		//if the categories are valid, split the string by comma into a slice
-		if categories.Valid {
-			p.Categories = strings.Split(categories.String, ",")
-		}
-		//append the post to the posts slice
-		posts = append(posts, p)
-	}
-	return posts
-}
 
 func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	//recieve the category ID from the URL
@@ -193,10 +109,10 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	if user == nil {
 		user = &User{
-			ID: 0,
+			ID:       0,
 			Username: "",
-			Email: "",
-			IsAdmin: false,
+			Email:    "",
+			IsAdmin:  false,
 		}
 	}
 	//collecting all the data into a struct
@@ -211,7 +127,7 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	h.templates.ExecuteTemplate(w, "category.html", data)
 }
 
-//a function to prepare the data for the post.html template
+// a function to prepare the data for the post.html template
 func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	//get the post ID from the URL by cutting the /post/ from the URL
 	postID := r.URL.Path[len("/post/"):]
@@ -280,7 +196,7 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//a function to get a specific post from the database
+// a function to get a specific post from the database
 func (h *Handler) getPostByID(postID string) (*Post, error) {
 	var post Post
 	err := h.db.QueryRow(`
