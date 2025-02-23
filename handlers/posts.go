@@ -9,7 +9,7 @@ import (
 // ables the user to create a new post
 func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	//checking if the user is logged in
-	user := h.GetSessionUser(r)
+	user := h.GetSessionUser(w, r)
 	if user == nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther) //if they are not logged in, redirect them to the login page
 		return

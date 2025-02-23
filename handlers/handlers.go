@@ -94,7 +94,7 @@ func (h *Handler) getPostCategories(postID int64) ([]string, error) {
 func (h *Handler) Rules(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title: "Forum Rules",
-		User:  h.GetSessionUser(r),
+		User:  h.GetSessionUser(w, r),
 	}
 	h.templates.ExecuteTemplate(w, "rules.html", data)
 }

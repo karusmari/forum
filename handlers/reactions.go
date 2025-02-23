@@ -25,7 +25,7 @@ func (h *Handler) PostReaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := h.GetSessionUser(r)
+	user := h.GetSessionUser(w, r)
 	if user == nil {
 		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -143,7 +143,7 @@ func (h *Handler) HandleCommentReaction(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//func to get the user from the session(are they authorized to react)
-	user := h.GetSessionUser(r)
+	user := h.GetSessionUser(w, r)
 	if user == nil {
 		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return

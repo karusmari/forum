@@ -24,8 +24,13 @@
                     User ID: {{.User.ID}}
                     Is Admin: {{.User.IsAdmin}}
                 </div>
-                <a href="/post/new" class="create-post-btn">CREATE POST</a>
-                <a href="/logout">LOGOUT</a>
+                {{ if ne .User.ID 0 }}
+                    <a href="/post/new">CREATE POST</a>
+                    <a href="/logout">LOGOUT</a>
+                    {{ else }}
+                    <a href="/login">LOGIN</a>
+                    <a href="/register">REGISTER</a>
+                {{ end }}
             {{ else }}
                 <a href="/login">LOGIN</a>
                 <a href="/register">REGISTER</a>

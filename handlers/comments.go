@@ -26,7 +26,7 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check authentication
-	user := h.GetSessionUser(r)
+	user := h.GetSessionUser(w, r)
 	if user == nil {
 		h.ErrorHandler(w, "Unauthorized", http.StatusUnauthorized)
 		return

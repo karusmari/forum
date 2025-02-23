@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"time"
+
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -244,7 +245,7 @@ func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // the purpose of this function is to find the user from the session
-func (h *Handler) GetSessionUser(r *http.Request) *User {
+func (h *Handler) GetSessionUser(w http.ResponseWriter, r *http.Request) *User {
 	//tries to find the session cookie, if not found, then we will return nil
 	cookie, err := r.Cookie("session_token")
 	if err != nil {
@@ -259,11 +260,21 @@ func (h *Handler) GetSessionUser(r *http.Request) *User {
 		JOIN sessions s ON u.id = s.user_id
 		WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP
 	`, cookie.Value).Scan(&user.ID, &user.Email, &user.Username, &user.IsAdmin)
+
 	//if the scan was successful, then we will fill the user object with the data
 
 	if err != nil {
+		http.SetCookie(w, &http.Cookie{
+			Name:     SessionTokenCookie,
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+		})
 		//if we don't find the user, then we will return nil
 		if err != sql.ErrNoRows {
+
 			return nil
 		}
 	}

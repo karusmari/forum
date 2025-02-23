@@ -22,7 +22,7 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//getting the user from the session
-	user := h.GetSessionUser(r)
+	user := h.GetSessionUser(w, r)
 
 	//collecting all the data into a struct
 
@@ -64,7 +64,7 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//gets the user who has a session right now
-	user := h.GetSessionUser(r)
+	user := h.GetSessionUser(w, r)
 
 	//query to get the posts with the given category ID
 	query := `
@@ -115,6 +115,7 @@ func (h *Handler) CategoryHandler(w http.ResponseWriter, r *http.Request) {
 			IsAdmin:  false,
 		}
 	}
+	
 	//collecting all the data into a struct
 	data := TemplateData{
 		Title:    category.Name,
@@ -138,7 +139,7 @@ func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	Category.ID, _ = strconv.ParseInt(catId, 10, 64)
 
 	//get the user from the session
-	user := h.GetSessionUser(r)
+	user := h.GetSessionUser(w, r)
 
 	//calling out the getPostByID function to get the post with the given ID
 	post, err := h.getPostByID(postID)
