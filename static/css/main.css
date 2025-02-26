@@ -233,3 +233,13 @@ body.auth-page {
     color: white;
     text-decoration: none;
 }
+
+.error-alert {
+    color: #ff0000;
+    /* background-color: #7a87a8; */
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    border: 1px solid #ff0000;
+    display: hidden;
+}

@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -43,6 +44,12 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	//this will get the email and password from the form
 	email := r.FormValue("email")
 	password := r.FormValue("password")
+
+	// Validate email
+	if !isValidEmail(email) {
+		h.ErrorHandler(w, "Invalid email format", http.StatusBadRequest)
+		return
+	}
 
 	//this will get the user from the database
 	var user User
@@ -138,11 +145,11 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	// If request is GET (client enters URL), display the register page
 	if r.Method == http.MethodGet {
 		data := TemplateData{
-			Title: "Sign Up",
+			Title: "Register",
 		}
 		h.templates.ExecuteTemplate(w, "register.html", data)
 		return
@@ -158,7 +165,44 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	username := r.FormValue("username")
 	password := r.FormValue("password")
+	confirmPassword := r.FormValue("confirm_password")
 
+	if !strings.Contains(email, "@") || !strings.Contains(email, ".") {
+		data := TemplateData{
+			Title: "Register",
+			Error: "Wrong e-mail format",
+		}
+		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
+			h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Password validation
+	if len(password) < 6 {
+		data := TemplateData{
+			Title: "Register",
+			Error: "Password must be at least 6 characters long",
+		}
+		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
+			h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
+		}
+		return
+	}
+
+
+	if password != confirmPassword {
+		data := TemplateData{
+			Title: "Register",
+			Error: "The passwords don't match",
+		}
+		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
+			h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	
 	// Check if user exists with this email
 	var exists bool
 	err := h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)", email).Scan(&exists)
@@ -169,7 +213,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	if exists {
 		data := TemplateData{
-			Title: "Sign Up",
+			Title: "Register",
 			Error: "This email address is already registered",
 		}
 		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
@@ -187,7 +231,7 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	if exists {
 		data := TemplateData{
-			Title: "Sign Up",
+			Title: "Register",
 			Error: "This username is already taken",
 		}
 		h.templates.ExecuteTemplate(w, "register.html", data)
@@ -214,6 +258,11 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+// Helper function to validate email format
+func isValidEmail(email string) bool {
+	return strings.Contains(email, "@") && strings.Contains(email, ".")
 }
 
 func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
