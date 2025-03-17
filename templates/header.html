@@ -22,7 +22,6 @@
             {{ if .User }}
                 <div style="display:none">
                     User ID: {{.User.ID}}
-                    Is Admin: {{.User.IsAdmin}}
                 </div>
                 {{ if ne .User.ID 0 }}
                     <a href="/post/new">CREATE POST</a>

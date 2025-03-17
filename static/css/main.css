@@ -178,6 +178,21 @@ body.auth-page {
 /* ==========================================================================
    Error Pages
    ========================================================================== */
+
+.error-page {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background: linear-gradient(135deg, #6f7275 0%, #192f56 100%);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    height: 100vh; 
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+    margin: 0; 
+}
 .error-container {
     max-width: 600px;
     margin: 20px auto;

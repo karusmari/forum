@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -70,7 +71,8 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			h.templates.ExecuteTemplate(w, "login.html", data)
 			return
 		}
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
+		log.Printf("Error getting user from database: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 	//this will compare the password from the form with the password from the database
@@ -103,7 +105,8 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	//starting a transaction from the database. If there is an error, then we will display an error message
 	tx, err := h.db.Begin()
 	if err != nil {
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
+        log.Printf("Error starting transaction: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -111,7 +114,8 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	//deleting the old sessions from the database
 	_, err = tx.Exec("DELETE FROM sessions WHERE user_id = ?", user.ID)
 	if err != nil {
-		h.ErrorHandler(w, "Session error", http.StatusInternalServerError)
+		log.Printf("Session error: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
@@ -122,13 +126,15 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	`, sessionToken, user.ID, expiresAt)
 
 	if err != nil {
-		h.ErrorHandler(w, "Session creation error", http.StatusInternalServerError)
+		log.Printf("Session creation error: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
 	//committing the transaction to the database
 	if err := tx.Commit(); err != nil {
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
+		log.Printf("Database error: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
@@ -173,7 +179,8 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 			Error: "Wrong e-mail format",
 		}
 		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
-			h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
+			log.Printf("Error rendering page: %v", err)
+		    h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -185,11 +192,11 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 			Error: "Password must be at least 6 characters long",
 		}
 		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
-			h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
+			log.Printf("Error rendering page: %v", err)
+		    h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		}
 		return
 	}
-
 
 	if password != confirmPassword {
 		data := TemplateData{
@@ -197,17 +204,18 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 			Error: "The passwords don't match",
 		}
 		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
-			h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
+            log.Printf("Error rendering page: %v", err)
+		    h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		}
 		return
 	}
 
-	
 	// Check if user exists with this email
 	var exists bool
 	err := h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)", email).Scan(&exists)
 	if err != nil {
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
+        log.Printf("Database error: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
@@ -217,7 +225,8 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 			Error: "This email address is already registered",
 		}
 		if err := h.templates.ExecuteTemplate(w, "register.html", data); err != nil {
-			h.ErrorHandler(w, "Error rendering page", http.StatusInternalServerError)
+			log.Printf("Error rendering page: %v", err)
+		    h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -225,7 +234,8 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	// Check if username is taken
 	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = ?)", username).Scan(&exists)
 	if err != nil {
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
+		log.Printf("Error rendering page: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
@@ -241,7 +251,8 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		h.ErrorHandler(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("Internal server error: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
@@ -252,7 +263,8 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	`, email, username, string(hashedPassword))
 
 	if err != nil {
-		h.ErrorHandler(w, "Error creating user", http.StatusInternalServerError)
+		log.Printf("Error creating user: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
@@ -276,7 +288,8 @@ func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	//deleting the session associated with the token from the database
 	_, err = h.db.Exec("DELETE FROM sessions WHERE token = ?", cookie.Value)
 	if err != nil {
-		h.ErrorHandler(w, "Error deleting session", http.StatusInternalServerError)
+		log.Printf("Error deleting session: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 

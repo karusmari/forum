@@ -6,15 +6,25 @@
             <i class="fas fa-arrow-left"></i> Back
         </button>
     </div>
+    
     <div class="post-page">
         {{ with .Post }}
             <article class="post">
+
+
                 {{ if .Categories }}
                     <div class="post-categories">
-                        Categories: {{ range $index, $category := .Categories }}{{ if $index }}, {{ end }}{{ $category }}{{ end }}
+                        <span class="categories-list">
+                            Categories:
+                            {{ range $index, $category := .Categories }}{{ if $index }}, {{ end }}{{ $category }}{{ end }}
+                        </span>
                     </div>
                 {{ end }}
+
+                <div class="post-title">
                 <h1>{{ .Title }}</h1>
+                    </div>
+
                 <div class="post-meta">
                     <time>{{ .CreatedAt.Format "02 Jan 2006 15:04" }}</time>
                     <span class="author">By {{ .Username }}</span>

@@ -1,32 +1,33 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
+	"forum/handlers"
+	"html/template"
 	"log"
 	"net/http"
-	"forum/handlers"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	//open the database
-	db, err := sql.Open("sqlite3", "./database/forum.db?_loc=auto")
+	// Initialize database
+	db, err := handlers.InitDB()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to initialize the database:", err)
 	}
 	defer db.Close()
 
-	if err := handlers.InitDB(db); err != nil {
-		log.Fatal("Failed to initialize the database:", err)
+	templates, err := template.ParseGlob("templates/*.html")
+	if err != nil {
+		log.Fatal("Failed to parse templates:", err)
 	}
 
-	// Create handlers
-	h := handlers.NewHandler(db)
+	// Create connection to the database
+	h := handlers.NewHandler(db, templates)
 
 	// Setup routes
 	http.HandleFunc("/", h.HomeHandler)
-	// http.HandleFunc("/categories", h.Categories)
 	http.HandleFunc("/rules", h.Rules)
 	http.HandleFunc("/register", h.HandleRegister)
 	http.HandleFunc("/login", h.HandleLogin)

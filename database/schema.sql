@@ -23,8 +23,6 @@ CREATE TABLE IF NOT EXISTS posts (
     content TEXT NOT NULL,
     username TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    likes INTEGER DEFAULT 0,
-    dislikes INTEGER DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -45,8 +43,6 @@ CREATE TABLE IF NOT EXISTS comments (
     content TEXT NOT NULL,
     username TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    likes INTEGER DEFAULT 0,
-    dislikes INTEGER DEFAULT 0,
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -75,15 +71,9 @@ CREATE TABLE IF NOT EXISTS sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
-CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
-CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);
-CREATE INDEX IF NOT EXISTS idx_reactions_post_id ON reactions(post_id);
-CREATE INDEX IF NOT EXISTS idx_reactions_comment_id ON reactions(comment_id);
-
 -- -- Add base categories
 INSERT OR IGNORE INTO categories (name, description) VALUES 
+    ('General', 'General discussion about Åland'),
     ('Studying in Åland', 'Posts about studying in Åland'),
     ('Culture and leisure in Åland', 'Posts about culture and leisure activities'),
     ('Moving to Åland', 'Get insights and practical tips on relocating to Åland'),

@@ -1,22 +1,12 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 )
-
-var location *time.Location
-
-// this will initialize the location for a timezone as soon as the package is loaded
-func init() {
-	var err error
-	location, err = time.LoadLocation("Europe/Helsinki") // UTC+2
-	if err != nil {
-		location = time.UTC
-	}
-}
 
 func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	// Check method
@@ -59,7 +49,8 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	var exists bool
 	err = h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM posts WHERE id = ?)", pid).Scan(&exists)
 	if err != nil {
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
+		log.Printf("Database error: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 	if !exists {
@@ -68,12 +59,13 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create comment with correct timestamp
-	now := time.Now().In(location)
+	now := time.Now().In(h.location)
 
 	// Start transaction
 	tx, err := h.db.Begin()
 	if err != nil {
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
+		log.Printf("Database error: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -85,20 +77,23 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	`, pid, user.ID, content, user.Username, now)
 
 	if err != nil {
-		h.ErrorHandler(w, "Error creating comment", http.StatusInternalServerError)
+		log.Printf("Error creating comment: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
 	//committing the transaction
 	if err := tx.Commit(); err != nil {
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
+		log.Printf("Database error: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
 	//getting the ID of the comment
 	commentID, err := result.LastInsertId()
 	if err != nil {
-		h.ErrorHandler(w, "Error creating comment", http.StatusInternalServerError)
+		log.Printf("Error creating comment: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
@@ -106,12 +101,14 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	var count int
 	err = h.db.QueryRow("SELECT COUNT(*) FROM comments WHERE id = ?", commentID).Scan(&count)
 	if err != nil {
-		h.ErrorHandler(w, "Database error", http.StatusInternalServerError)
+		log.Printf("Database error: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
 	if count == 0 {
-		h.ErrorHandler(w, "Failed to create comment", http.StatusInternalServerError)
+		log.Printf("Failed to create comment: %v", err)
+		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
 		return
 	}
 
@@ -119,3 +116,41 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
 }
 
+// Add a new method to get comments
+func (h *Handler) getComments(postID int64) ([]*Comment, error) {
+	rows, err := h.db.Query(`
+		SELECT c.id, c.user_id, c.content, c.created_at, c.username,
+		COUNT(CASE WHEN r.type = 'like' THEN 1 END) as likes,
+		COUNT(CASE WHEN r.type = 'dislike' THEN 1 END) as dislikes
+		FROM comments c
+		LEFT JOIN reactions r ON c.id = r.comment_id
+		WHERE c.post_id = ?
+		GROUP BY c.id, c.user_id, c.content, c.created_at, c.username
+		ORDER BY c.created_at DESC
+	`, postID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	//collecting all the comments into a slice
+	var comments []*Comment
+	for rows.Next() {
+		var c Comment
+		err := rows.Scan(
+			&c.ID, &c.UserID, &c.Content, &c.CreatedAt, &c.Username,
+			&c.Likes, &c.Dislikes,
+		)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, &c)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return comments, nil
+}

@@ -155,15 +155,21 @@ a:hover {
     transition: opacity 0.3s ease;
 }
 
+.post-form-container h2 {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 20px;
+    padding: 20px;
+    margin-bottom: -50px;
+}
+
 .post-meta {
-    font-size: 16px;
+    font-size: 12px;
     color: #000000;
     margin-bottom: 1rem;
-    font-weight: bold;
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 5px 0;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 .post-meta span {
@@ -172,7 +178,8 @@ a:hover {
 
 .post-content {
     margin-bottom: 1rem;
-    font-size: 1em;
+    font-size: 20px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 .post-page {
@@ -181,15 +188,32 @@ a:hover {
 }
 
 .post-categories {
-    color: #000000;
-    font-weight: bold;
-    margin-bottom: 8px;
+    display: flex;                
+    align-items: center;           
+    /* margin-bottom: 15px; */
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    font-size: 1.2em;
+    font-size: 12px;
+    color: black; 
+}
+
+.post-title h1 {
+    font-size: 20px;
+    font-weight: bold;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 .post-buttons {
     display: none;
+}
+
+.post {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(87, 88, 91, 0.1);
+    transition: opacity 0.3s ease;  
+    text-align: left;              
 }
 
 .category-tag {
@@ -241,6 +265,7 @@ footer {
     padding: 2rem 0;
     margin-top: 3rem;
     border-top: 1px solid #050505 !important;
+    padding-left: 20px;
 }
 
 .footer-content {
@@ -389,12 +414,18 @@ footer {
     border-color: #999;
 }
 
-.create-post-btn {
+.form-submit-container {
+    text-align: left; 
+    margin-top: 0px;   
+    padding: 15px;
+}
+
+.submit-btn  {
     display: inline-flex;
     align-items: center;
     padding: 8px 16px;
     background-color: #376c91;
-    color: white;
+    color: rgb(2, 2, 2);
     border: 1px solid #050505;
     border-radius: 4px;
     cursor: pointer;
@@ -404,7 +435,7 @@ footer {
     font-weight: bold;
 }
 
-.create-post-btn:hover {
+.submit-btn:hover {
     background-color: #2c5474;
     color: white;
     text-decoration: none;
@@ -482,12 +513,16 @@ form {
     gap: 10px;
     margin-bottom: 0.5rem;
     color: #000000;
-    font-weight: bold;
+    font-weight: normal;
+    font-size: 12px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 .comment-content {
     margin: 0.5rem 0;
     color: #000000;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 17px;
 }
 
 .comments-section h2 {
@@ -590,6 +625,7 @@ form {
 
 .category-page {
     padding: 20px;
+    font-size: 12px;
 }
 
 .category-card {

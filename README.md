@@ -23,13 +23,18 @@ The application uses an **SQL database** for storing user data, posts, comments,
 - **Golang** for backend logic
 - **HTML, CSS, JavaScript** for frontend
 - **SQL Database** for data storage
+- **Docker** for easier deployment
 
-## Authors
-- **Maris**
-- **Sergei**
-- **Kateryna**
+### Running with Docker
 
-## Installation & Setup
+1. **Give user rights to the shell script**:
+   ```bash
+   chmod +x docker.sh
+2. **Run the Docker container:**
+3. **Access the forum:**
+Once the container is up, open it in Docker and visit the forum in your browser.
+
+## Running with GO 
 1. Clone the repository:
    ```sh
    git clone https://01.gritlab.ax/git/kovsiien/forum.git
@@ -39,9 +44,18 @@ The application uses an **SQL database** for storing user data, posts, comments,
 3. Set up the database.
 4. Run the application:
    ```sh
-   go run main.go
+   go run .
    ```
-5. Open the application in your browser on localhost:8080
+5. Open the application in your browser on http://localhost:8080
+
+### ER Diagram
+
+![alt text](ERD.png)
+
+## Authors
+- **Maris**
+- **Sergei**
+- **Kateryna**
 
 ## License
 This project is for educational purposes and does not have a specific license yet.
