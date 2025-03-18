@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // ables the user to create a new post
@@ -62,10 +63,11 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	createdAt := time.Now().In(h.location)
 	result, err := h.db.Exec(`
-		INSERT INTO posts (user_id, title, content, username)
-		SELECT ?, ?, ?, username FROM users WHERE id = ?
-	`, user.ID, title, content, user.ID)
+    INSERT INTO posts (user_id, title, content, username, created_at)
+    SELECT ?, ?, ?, username, ? FROM users WHERE id = ?
+`, user.ID, title, content, createdAt, user.ID)
 	if err != nil {
 		log.Printf("Error creating post: %v", err)
 		h.ErrorHandler(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
@@ -80,11 +82,10 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	// If no categories were selected, use category ID = 1
 	if len(categories) == 0 {
 		categories = append(categories, "1") // Use category ID 1 if no category is selected
-}
+	}
 
 	for _, categoryID := range categories {
 		_, err = h.db.Exec(`
