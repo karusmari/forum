@@ -41,23 +41,15 @@ func (h *Handler) Rules(w http.ResponseWriter, r *http.Request) {
 
 // handling the error messages
 func (h *Handler) ErrorHandler(w http.ResponseWriter, errorMessage string, statusCode int) {
-	// Log only server errors (5xx) for debugging
-	if statusCode >= 500 {
-		log.Printf("Server error: %s (Status: %d)", errorMessage, statusCode)
-		// Override user-facing message for security
-		errorMessage = "Something went wrong. Please try again later."
-	}
+    w.WriteHeader(statusCode)
 
-	w.WriteHeader(statusCode)
+    data := ErrorData{
+        ErrorMessage: errorMessage,
+        ErrorCode:    fmt.Sprintf("%d", statusCode),
+    }
 
-	data := ErrorData{
-		ErrorMessage: errorMessage,
-		ErrorCode:    fmt.Sprintf("%d", statusCode),
-	}
-
-	// Try rendering the error page, fallback to plain text on failure
-	err := h.templates.ExecuteTemplate(w, "error.html", data)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+    err := h.templates.ExecuteTemplate(w, "error.html", data)
+    if err != nil {
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+    }
 }
